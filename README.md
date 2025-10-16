@@ -1,141 +1,243 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# 🎵 Harshify - Your Personal Music Discovery Platform
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+A beautiful, feature-rich music streaming application with Spotify integration, real-time search, and AI-powered song analysis.
 
-## ✨ Technology Stack
+## ✨ Features
 
-This scaffold provides a robust foundation built with:
+### 🎵 Core Music Features
+- **Multi-Platform Search**: Search across 9 music platforms (Spotify, iTunes, Deezer, Jamendo, Last.fm, SoundCloud, YouTube Music, Bandcamp, Popular Database)
+- **Real Spotify Integration**: Authentic Spotify API integration with client credentials
+- **Floating Song Cards**: Beautiful floating cards with detailed song information
+- **Preview Playback**: Play 30-second previews directly from the app
+- **Favorites System**: Save your favorite songs with persistent storage
 
-### 🎯 Core Framework
-- **⚡ Next.js 15** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+### 🎨 Floating Card Features
+- **Three Information Tabs**:
+  - **Details**: Track information, album details, audio features visualization
+  - **Lyrics**: Full song lyrics from multiple APIs
+  - **AI Analysis**: Intelligent song analysis using AI
+- **Audio Features Visualization**: Danceability, energy, valence, tempo with progress bars
+- **Direct Spotify Integration**: Open songs directly in Spotify
+- **Gradient Headers**: Beautiful artwork display with song information
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+### 🌍 International Music Library
+- **40+ Popular Songs**: Curated database of international hits
+- **Bollywood, K-Pop, Latin, Western, African, European, Middle Eastern, Japanese, Chinese, Russian**
+- **Smart Deduplication**: Removes duplicates with source priority
+- **Color-Coded Sources**: Visual badges for each music platform
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
+### 🤖 AI-Powered Features
+- **Song Analysis**: Genre, mood, and what makes each song special
+- **Intelligent Search**: Multi-strategy search across platforms
+- **Lyrics Integration**: Multiple lyrics APIs with fallback services
 
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Axios** - Promise-based HTTP client
+### 🎯 User Experience
+- **Responsive Design**: Works perfectly on all devices
+- **Keyboard Shortcuts**: Space (play/pause), ← → (seek), ↑ ↓ (volume), F (favorite)
+- **Smooth Animations**: Beautiful transitions and micro-interactions
+- **Dark/Light Theme**: Easy theme switching
+- **Real-time Search**: Instant results as you type
 
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
+## 🚀 Technology Stack
 
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
+### Frontend
+- **Next.js 15** with App Router
+- **TypeScript 5** for type safety
+- **Tailwind CSS 4** for styling
+- **shadcn/ui** components
+- **Framer Motion** for animations
+- **Zustand** for state management
 
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
+### Backend & APIs
+- **Spotify Web API** with real authentication
+- **iTunes/Apple Music API**
+- **Deezer API**
+- **Jamendo API**
+- **Last.fm API**
+- **Multiple Lyrics APIs**
+- **Z.ai Web Dev SDK** for AI analysis
 
-## 🎯 Why This Scaffold?
+### Database & Storage
+- **Prisma ORM** with SQLite
+- **LocalStorage** for favorites persistence
+- **Real-time audio streaming**
 
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
+## 🎵 Music Sources
+
+| Platform | Features | Access |
+|----------|----------|---------|
+| **Spotify** | Full track data, audio features, previews | ✅ Real API |
+| **iTunes** | Comprehensive catalog, preview URLs | ✅ Available |
+| **Deezer** | Radio, top tracks, album data | ✅ Available |
+| **Jamendo** | Full audio tracks, independent artists | ✅ Available |
+| **Last.fm** | Music discovery, recommendations | ✅ Available |
+| **Popular Database** | Curated international hits | ✅ Available |
+| **SoundCloud** | Independent artists, exclusives | 🔄 Mock |
+| **YouTube Music** | Official videos, live versions | 🔄 Mock |
+| **Bandcamp** | Independent music support | 🔄 Mock |
+
+## 🎨 Visual Features
+
+### Source Badges
+- 🟢 **Spotify** - Green badge for official Spotify tracks
+- 🔵 **iTunes** - Blue badge for Apple Music catalog
+- 🟣 **Deezer** - Purple badge for Deezer tracks
+- 🟦 **Jamendo** - Teal badge for independent music
+- 🩷 **Popular** - Pink badge for curated hits
+- 🔴 **Last.fm** - Red badge for music discovery
+- 🟠 **SoundCloud** - Orange badge for indie content
+- 🔴 **YouTube** - Red badge for video content
+- 🔵 **Bandcamp** - Blue badge for artist support
+
+### Audio Features Visualization
+- **Danceability**: Yellow to orange gradient
+- **Energy**: Yellow to orange gradient  
+- **Valence**: Green to blue gradient
+- **Acousticness**: Amber to orange gradient
+- **Tempo**: Blue to purple gradient
+- **Instrumentalness**: Blue to purple gradient
+- **Liveness**: Blue to purple gradient
+- **Speechiness**: Blue to purple gradient
 
 ## 🚀 Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/HoneyGpt/Harshify.git
+cd Harshify
+
 # Install dependencies
 npm install
 
 # Start development server
 npm run dev
 
-# Build for production
-npm run build
-
-# Start production server
-npm start
+# Open your browser
+# Navigate to http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
+## 🎮 How to Use
 
-## 🤖 Powered by Z.ai
+### Basic Usage
+1. **Search for any song** using the search bar
+2. **Click on any song** to open the floating card
+3. **Play preview** directly from the floating card
+4. **Add to favorites** with the heart button
+5. **Switch between tabs** for details, lyrics, and AI analysis
 
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
+### Keyboard Shortcuts
+- **Space**: Play/Pause current track
+- **← / →**: Seek backward/forward 10 seconds
+- **↑ / ↓**: Volume up/down
+- **F**: Add current track to favorites
 
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
+### Advanced Features
+- **Multi-source search**: Results from 9 different platforms
+- **Smart filtering**: Automatic deduplication and relevance sorting
+- **Detailed analysis**: Audio features and AI-powered insights
+- **Direct integration**: Open tracks in Spotify for full experience
 
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
+## 🎵 Featured Songs
 
-## 📁 Project Structure
+The app includes a curated selection of international hits:
 
+### Bollywood
+- Husn - Anuv Jain
+- Chinnari Talli - Ghantasala
+- Tum Hi Ho - Arijit Singh
+- Dilbar - Neha Kakkar
+
+### K-Pop
+- Seven - Jungkook ft. Latto
+- Dynamite - BTS
+- Gangnam Style - PSY
+- Kill This Love - BLACKPINK
+
+### Latin/Reggaeton
+- Despacito - Luis Fonsi ft. Daddy Yankee
+- Bichota - KAROL G
+- Dákiti - Bad Bunny & Jhay Cortez
+
+### Western Pop
+- Blinding Lights - The Weeknd
+- Shape of You - Ed Sheeran
+- Lemon - N.E.R.D & Rihanna
+- Watermelon Sugar - Harry Styles
+
+### And many more from African, European, Middle Eastern, Japanese, Chinese, and Russian music!
+
+## 🔧 Development
+
+### Project Structure
 ```
 src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+├── app/
+│   ├── api/
+│   │   ├── songs/          # Music search API
+│   │   └── song-details/   # Song details API
+│   └── page.tsx            # Main application
+├── components/
+│   ├── ui/                 # shadcn/ui components
+│   └── SongFloatingCard.tsx # Floating song card
+└── lib/
+    └── db.ts               # Database configuration
 ```
 
-## 🎨 Available Features & Components
+### API Endpoints
+- `GET /api/songs?search={query}` - Search for songs
+- `GET /api/song-details?trackId={id}&artist={artist}&title={title}` - Get detailed song information
 
-This scaffold includes a comprehensive set of modern web development tools:
+### Environment Variables
+Create a `.env.local` file for additional configuration:
+```env
+# Spotify API (already configured)
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+# Additional API keys (optional)
+LASTFM_API_KEY=your_lastfm_key
+```
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
+## 🎨 Customization
 
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
+### Adding New Music Sources
+1. Create a new fetch function in `src/app/api/songs/route.ts`
+2. Add the source to the `getSourceIcon` function
+3. Update the source priority in the search results
 
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Axios + TanStack Query
-- **State Management**: Simple and scalable with Zustand
+### Styling
+- Modify Tailwind classes in components
+- Update color schemes in CSS variables
+- Add new animations with Framer Motion
 
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+### Features
+- Add new tabs to the floating card
+- Implement additional audio features
+- Create new API endpoints for extended functionality
 
-## 🤝 Get Started with Z.ai
+## 🤝 Contributing
 
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Spotify** for the amazing Web API
+- **Z.ai** for the AI-powered analysis capabilities
+- **shadcn/ui** for the beautiful component library
+- **All music platforms** for providing access to their catalogs
+
+## 🎵 Built with ❤️ for Music Lovers
+
+Created with passion for music discovery and enhanced by [Z.ai](https://claude.ai/code) 🚀
 
 ---
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+**Harshify** - Where every song tells a story, and every story deserves to be heard. 🎶✨
