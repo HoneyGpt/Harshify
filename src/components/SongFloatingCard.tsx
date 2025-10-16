@@ -156,38 +156,38 @@ export default function SongFloatingCard({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden bg-white/95 backdrop-blur-md shadow-2xl">
         <CardContent className="p-0">
           {/* Header */}
-          <div className="relative h-48 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-6">
+          <div className="relative h-40 sm:h-48 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-4 sm:p-6">
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-white hover:bg-white/20 rounded-full p-2"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             
-            <div className="flex items-end gap-6">
+            <div className="flex items-end gap-3 sm:gap-6">
               <img
                 src={song.coverUrl}
                 alt={song.title}
-                className="w-32 h-32 rounded-xl shadow-lg object-cover"
+                className="w-20 h-20 sm:w-32 sm:h-32 rounded-lg sm:rounded-xl shadow-lg object-cover"
               />
-              <div className="flex-1 text-white">
-                <h2 className="text-3xl font-bold mb-2">{song.title}</h2>
-                <p className="text-xl opacity-90 mb-2">{song.artist}</p>
-                <div className="flex items-center gap-3">
+              <div className="flex-1 text-white min-w-0">
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 truncate">{song.title}</h2>
+                <p className="text-sm sm:text-lg md:text-xl opacity-90 mb-1 sm:mb-2 truncate">{song.artist}</p>
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                   {getSourceIcon(song.source)}
                   {song.explicit && (
-                    <Badge variant="secondary" className="bg-red-500 text-white">Explicit</Badge>
+                    <Badge variant="secondary" className="bg-red-500 text-white text-xs">Explicit</Badge>
                   )}
                   {trackDetails?.popularity && (
                     <div className="flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <span className="text-sm">{trackDetails.popularity}%</span>
+                      <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-xs sm:text-sm">{trackDetails.popularity}%</span>
                     </div>
                   )}
                 </div>
@@ -196,43 +196,47 @@ export default function SongFloatingCard({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 p-6 border-b">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-4 sm:p-6 border-b">
             <Button
               onClick={() => onPlay(song.preview)}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full px-6"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full px-3 sm:px-6 py-2 text-xs sm:text-sm flex-1 sm:flex-none"
               disabled={!song.preview}
             >
-              <Music className="w-4 h-4 mr-2" />
-              Play Preview
+              <Music className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Play Preview</span>
+              <span className="sm:hidden">Play</span>
             </Button>
             
             <Button
               onClick={downloadPreview}
               variant="outline"
-              className="rounded-full"
+              className="rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm flex-1 sm:flex-none"
               disabled={!song.preview}
             >
-              <Download className="w-4 h-4 mr-2" />
-              Download
+              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Download</span>
+              <span className="sm:hidden">⬇</span>
             </Button>
             
             <Button
               variant="outline"
               onClick={() => onToggleFavorite(song.id)}
-              className="rounded-full"
+              className="rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm flex-1 sm:flex-none"
             >
-              <Heart className={`w-4 h-4 mr-2 ${song.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-              {song.isFavorite ? 'Favorited' : 'Favorite'}
+              <Heart className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${song.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+              <span className="hidden sm:inline">{song.isFavorite ? 'Favorited' : 'Favorite'}</span>
+              <span className="sm:hidden">{song.isFavorite ? '❤️' : '🤍'}</span>
             </Button>
             
             {trackDetails?.external_urls?.spotify && (
               <Button
                 variant="outline"
                 onClick={() => window.open(trackDetails.external_urls.spotify, '_blank')}
-                className="rounded-full"
+                className="rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm flex-1 sm:flex-none"
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in Spotify
+                <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Spotify</span>
+                <span className="sm:hidden">🎵</span>
               </Button>
             )}
           </div>
@@ -244,22 +248,25 @@ export default function SongFloatingCard({
                 key={tab}
                 variant={activeTab === tab ? 'default' : 'ghost'}
                 onClick={() => setActiveTab(tab)}
-                className={`rounded-none capitalize flex-1 ${
+                className={`rounded-none capitalize flex-1 text-xs sm:text-sm px-2 py-3 ${
                   activeTab === tab 
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' 
                     : 'hover:bg-gray-100'
                 }`}
               >
-                {tab === 'details' && <Music className="w-4 h-4 mr-2" />}
-                {tab === 'lyrics' && <Mic className="w-4 h-4 mr-2" />}
-                {tab === 'analysis' && <TrendingUp className="w-4 h-4 mr-2" />}
-                {tab}
+                {tab === 'details' && <Music className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+                {tab === 'lyrics' && <Mic className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+                {tab === 'analysis' && <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+                <span className="hidden sm:inline">{tab}</span>
+                <span className="sm:hidden">
+                  {tab === 'details' ? '📋' : tab === 'lyrics' ? '🎤' : '📊'}
+                </span>
               </Button>
             ))}
           </div>
 
           {/* Content */}
-          <div className="p-6 max-h-96 overflow-y-auto">
+          <div className="p-4 sm:p-6 max-h-80 sm:max-h-96 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>

@@ -307,43 +307,43 @@ export default function Harshify() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Header */}
-        <header className="text-center mb-12">
-          <div className="flex justify-center items-center gap-2 mb-6">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] bg-clip-text text-transparent" style={{ fontFamily: 'cursive' }}>
+        <header className="text-center mb-6 sm:mb-12">
+          <div className="flex justify-center items-center gap-2 mb-4 sm:mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] bg-clip-text text-transparent" style={{ fontFamily: 'cursive' }}>
               Harshify
             </h1>
-            <span className="text-3xl">💛</span>
+            <span className="text-2xl sm:text-3xl">💛</span>
           </div>
           
           {/* Greeting */}
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-semibold bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] bg-clip-text text-transparent mb-2" style={{ fontFamily: 'cursive' }}>
+          <div className="text-center mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] bg-clip-text text-transparent mb-2" style={{ fontFamily: 'cursive' }}>
               {greeting}, Dear Listener 🎵
             </h2>
-            <p className="text-[#3B3B3B] opacity-80">Ready to brighten your day with music?</p>
-            <div className="text-xs text-[#3B3B3B] opacity-60 mt-2">
+            <p className="text-sm sm:text-base text-[#3B3B3B] opacity-80">Ready to brighten your day with music?</p>
+            <div className="text-xs text-[#3B3B3B] opacity-60 mt-2 hidden sm:block">
               💡 Keyboard shortcuts: Space (play/pause) • ← → (seek) • ↑ ↓ (volume) • F (favorite)
             </div>
           </div>
           
           {/* Search Bar */}
-          <div className="flex justify-center items-center gap-3 max-w-2xl mx-auto">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3B3B3B] opacity-60 w-5 h-5" />
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 max-w-2xl mx-auto px-4">
+            <div className="relative flex-1 w-full sm:w-auto">
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B3B3B] opacity-60 w-4 h-4 sm:w-5 sm:h-5" />
               <Input
                 type="text"
                 placeholder="Search your song..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && searchTracks()}
-                className="pl-12 pr-4 py-3 rounded-full border-2 border-[#FFB6C1] bg-white/80 backdrop-blur-sm focus:border-[#FFD580] transition-all duration-300 shadow-lg"
+                className="pl-10 sm:pl-12 pr-4 py-2 sm:py-3 rounded-full border-2 border-[#FFB6C1] bg-white/80 backdrop-blur-sm focus:border-[#FFD580] transition-all duration-300 shadow-lg text-sm sm:text-base w-full"
               />
             </div>
             <Button
               onClick={searchTracks}
-              className="bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] hover:from-[#FFB6C1]/90 hover:to-[#FFD580]/90 text-white rounded-full px-6 py-3 font-semibold shadow-lg hover:scale-105 transition-all duration-300"
+              className="bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] hover:from-[#FFB6C1]/90 hover:to-[#FFD580]/90 text-white rounded-full px-4 sm:px-6 py-2 sm:py-3 font-semibold shadow-lg hover:scale-105 transition-all duration-300 w-full sm:w-auto text-sm sm:text-base"
             >
               Search
             </Button>
@@ -351,54 +351,56 @@ export default function Harshify() {
         </header>
 
         {/* View Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-lg">
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-lg inline-flex">
             <Button
               variant={currentView === 'all' ? 'default' : 'ghost'}
               onClick={() => setCurrentView('all')}
-              className={`rounded-full px-6 py-2 font-medium transition-all duration-300 ${
+              className={`rounded-full px-3 sm:px-6 py-2 font-medium transition-all duration-300 text-xs sm:text-sm ${
                 currentView === 'all' 
                   ? 'bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] text-white shadow-md' 
                   : 'text-[#3B3B3B] hover:bg-[#FFB6C1]/20'
               }`}
             >
-              <ListMusic className="w-4 h-4 mr-2" />
-              All Songs
+              <ListMusic className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">All Songs</span>
+              <span className="sm:hidden">All</span>
             </Button>
             <Button
               variant={currentView === 'favorites' ? 'default' : 'ghost'}
               onClick={() => setCurrentView('favorites')}
-              className={`rounded-full px-6 py-2 font-medium transition-all duration-300 ${
+              className={`rounded-full px-3 sm:px-6 py-2 font-medium transition-all duration-300 text-xs sm:text-sm ${
                 currentView === 'favorites' 
                   ? 'bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] text-white shadow-md' 
                   : 'text-[#3B3B3B] hover:bg-[#FFB6C1]/20'
               }`}
             >
-              <Heart className="w-4 h-4 mr-2" />
-              Favorites ({favorites.size})
+              <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Favorites ({favorites.size})</span>
+              <span className="sm:hidden">({favorites.size})</span>
             </Button>
           </div>
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="text-center py-10">
+          <div className="text-center py-8 sm:py-10">
             <div className="inline-flex items-center gap-2 text-[#FFB6C1]">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#FFB6C1]"></div>
-              <span className="text-lg font-medium">Loading beautiful tracks...</span>
+              <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-[#FFB6C1]"></div>
+              <span className="text-sm sm:text-lg font-medium">Loading beautiful tracks...</span>
             </div>
           </div>
         )}
 
         {/* Empty State for Favorites */}
         {!loading && currentView === 'favorites' && tracks.filter(track => track.isFavorite).length === 0 && (
-          <div className="text-center py-20">
-            <Heart className="w-16 h-16 text-[#FFB6C1]/30 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-[#3B3B3B] mb-2">No favorites yet</h3>
-            <p className="text-[#3B3B3B] opacity-70 mb-6">Start adding some songs to your favorites!</p>
+          <div className="text-center py-12 sm:py-20 px-4">
+            <Heart className="w-12 h-12 sm:w-16 sm:h-16 text-[#FFB6C1]/30 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-[#3B3B3B] mb-2">No favorites yet</h3>
+            <p className="text-sm sm:text-base text-[#3B3B3B] opacity-70 mb-4 sm:mb-6">Start adding some songs to your favorites!</p>
             <Button
               onClick={() => setCurrentView('all')}
-              className="bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] hover:from-[#FFB6C1]/90 hover:to-[#FFD580]/90 text-white rounded-full px-6 py-3 font-semibold shadow-lg"
+              className="bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] hover:from-[#FFB6C1]/90 hover:to-[#FFD580]/90 text-white rounded-full px-4 sm:px-6 py-2 sm:py-3 font-semibold shadow-lg text-sm sm:text-base"
             >
               Browse All Songs
             </Button>
@@ -406,35 +408,35 @@ export default function Harshify() {
         )}
 
         {/* Music Cards Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-24">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-20 sm:mb-24">
           {(currentView === 'favorites' 
             ? tracks.filter(track => track.isFavorite) 
             : tracks
           ).map((track) => (
             <div
               key={track.id}
-              className="group bg-white rounded-2xl shadow-lg p-4 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer"
+              className="group bg-white rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 hover:scale-[1.02] sm:hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer"
               onClick={() => playTrack(track)}
             >
-              <div className="relative mb-4">
+              <div className="relative mb-3 sm:mb-4">
                 <img
                   src={track.coverUrl}
                   alt={track.title}
-                  className="w-full h-40 object-cover rounded-2xl transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-32 sm:h-40 object-cover rounded-xl sm:rounded-2xl transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
                     target.nextElementSibling?.classList.remove('hidden')
                   }}
                 />
-                <div className="w-full h-40 bg-gradient-to-br from-[#FFB6C1] to-[#FFD580] rounded-2xl flex items-center justify-center hidden">
-                  <Music className="w-16 h-16 text-white opacity-80" />
+                <div className="w-full h-32 sm:h-40 bg-gradient-to-br from-[#FFB6C1] to-[#FFD580] rounded-xl sm:rounded-2xl flex items-center justify-center hidden">
+                  <Music className="w-12 h-12 sm:w-16 sm:h-16 text-white opacity-80" />
                 </div>
                 
                 {/* Currently playing indicator */}
                 {current?.id === track.id && (
-                  <div className="absolute top-2 left-2 bg-[#FFD580] text-white rounded-full p-2 animate-pulse">
-                    {isPlaying ? <Volume2 className="w-4 h-4" /> : <Music className="w-4 h-4" />}
+                  <div className="absolute top-2 left-2 bg-[#FFD580] text-white rounded-full p-1.5 sm:p-2 animate-pulse">
+                    {isPlaying ? <Volume2 className="w-3 h-3 sm:w-4 sm:h-4" /> : <Music className="w-3 h-3 sm:w-4 sm:h-4" />}
                   </div>
                 )}
                 
@@ -446,22 +448,22 @@ export default function Harshify() {
                 {/* Favorite Button */}
                 <Button
                   size="sm"
-                  className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-[#FFB6C1] rounded-full p-2 shadow-lg group-hover:scale-110 transition-transform"
+                  className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-[#FFB6C1] rounded-full p-1.5 sm:p-2 shadow-lg group-hover:scale-110 transition-transform"
                   onClick={(e) => {
                     e.stopPropagation()
                     toggleFavorite(track.id)
                   }}
                 >
-                  <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                  <Heart className={`w-3 h-3 sm:w-4 sm:h-4 ${track.isFavorite ? 'fill-current text-red-500' : ''}`} />
                 </Button>
               </div>
               
-              <h3 className="font-bold text-lg text-[#3B3B3B] mb-1 truncate">{track.title}</h3>
-              <p className="text-sm text-[#3B3B3B] opacity-70 mb-1 truncate">{track.artist}</p>
+              <h3 className="font-bold text-sm sm:text-lg text-[#3B3B3B] mb-1 truncate">{track.title}</h3>
+              <p className="text-xs sm:text-sm text-[#3B3B3B] opacity-70 mb-1 truncate">{track.artist}</p>
               <p className="text-xs text-[#3B3B3B] opacity-50 mb-2 truncate">{track.album}</p>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-[#3B3B3B] opacity-60">{track.duration}</span>
-                <Play className="w-4 h-4 text-[#FFB6C1] group-hover:text-[#FFD580] transition-colors" />
+                <Play className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFB6C1] group-hover:text-[#FFD580] transition-colors" />
               </div>
             </div>
           ))}
@@ -469,10 +471,10 @@ export default function Harshify() {
 
         {/* Now Playing Player */}
         {current && (
-          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 w-11/12 max-w-2xl z-50">
-            <Card className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+          <div className="fixed bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 w-11/12 sm:w-10/12 max-w-2xl z-50">
+            <Card className="bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0">
                   <img 
                     src={current.coverUrl} 
                     alt={current.album}
@@ -484,40 +486,42 @@ export default function Harshify() {
                     }}
                   />
                   <div className="w-full h-full bg-gradient-to-br from-[#FFB6C1] to-[#FFD580] rounded-xl flex items-center justify-center hidden">
-                    <Music className="w-8 h-8 text-white" />
+                    <Music className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
                 </div>
                 
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-[#3B3B3B]">{current.title}</h3>
-                    {getSourceIcon(current.source)}
+                    <h3 className="font-semibold text-sm sm:text-base text-[#3B3B3B] truncate">{current.title}</h3>
+                    <div className="hidden sm:block">
+                      {getSourceIcon(current.source)}
+                    </div>
                   </div>
-                  <p className="text-sm text-[#3B3B3B] opacity-70">{current.artist}</p>
+                  <p className="text-xs sm:text-sm text-[#3B3B3B] opacity-70 truncate">{current.artist}</p>
                 </div>
                 
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    className="bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] hover:from-[#FFB6C1]/90 hover:to-[#FFD580]/90 text-white rounded-full p-3 shadow-lg"
+                    className="bg-gradient-to-r from-[#FFB6C1] to-[#FFD580] hover:from-[#FFB6C1]/90 hover:to-[#FFD580]/90 text-white rounded-full p-2 sm:p-3 shadow-lg"
                     onClick={togglePlayPause}
                   >
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                    {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-white/90 hover:bg-white text-[#FFB6C1] rounded-full p-3 shadow-lg"
+                    className="bg-white/90 hover:bg-white text-[#FFB6C1] rounded-full p-2 sm:p-3 shadow-lg"
                     onClick={() => toggleFavorite(current.id)}
                   >
-                    <Heart className={`w-5 h-5 ${current.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                    <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${current.isFavorite ? 'fill-current text-red-500' : ''}`} />
                   </Button>
                 </div>
               </div>
               
               {/* Progress Bar */}
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-[#3B3B3B] opacity-70 w-10">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-xs text-[#3B3B3B] opacity-70 w-8 sm:w-10">
                     {formatTime(currentTime)}
                   </span>
                   <div className="flex-1 relative">
@@ -527,19 +531,19 @@ export default function Harshify() {
                       max={duration || 100}
                       value={currentTime}
                       onChange={handleProgressChange}
-                      className="w-full h-2 bg-[#FFB6C1]/30 rounded-full appearance-none cursor-pointer slider"
+                      className="w-full h-1.5 sm:h-2 bg-[#FFB6C1]/30 rounded-full appearance-none cursor-pointer slider"
                       style={{
                         background: `linear-gradient(to right, #FFB6C1 0%, #FFD580 ${(currentTime / (duration || 1)) * 100}%, #FFB6C1 30% ${(currentTime / (duration || 1)) * 100}%, #FFB6C1 30%)`
                       }}
                     />
                   </div>
-                  <span className="text-xs text-[#3B3B3B] opacity-70 w-10">
+                  <span className="text-xs text-[#3B3B3B] opacity-70 w-8 sm:w-10">
                     {formatTime(duration)}
                   </span>
                 </div>
                 
-                {/* Volume Control */}
-                <div className="flex items-center gap-3">
+                {/* Volume Control - Hidden on mobile */}
+                <div className="flex items-center gap-2 sm:gap-3 hidden sm:flex">
                   <Volume2 className="w-4 h-4 text-[#FFB6C1]" />
                   <input
                     type="range"
@@ -548,7 +552,7 @@ export default function Harshify() {
                     step="0.1"
                     value={volume}
                     onChange={handleVolumeChange}
-                    className="w-24 h-1 bg-[#FFB6C1]/30 rounded-full appearance-none cursor-pointer"
+                    className="w-20 sm:w-24 h-1 bg-[#FFB6C1]/30 rounded-full appearance-none cursor-pointer"
                     style={{
                       background: `linear-gradient(to right, #FFB6C1 0%, #FFD580 ${volume * 100}%, #FFB6C1 30% ${volume * 100}%, #FFB6C1 30%)`
                     }}
