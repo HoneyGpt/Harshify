@@ -14,24 +14,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "Harshify - Music Discovery Platform",
+  description: "Discover and explore music from multiple platforms with AI-powered analysis. Search, play, and analyze your favorite songs.",
+  keywords: ["Harshify", "music", "discovery", "Spotify", "AI", "search", "playlists", "songs"],
+  authors: [{ name: "Harshify Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.svg",
+    apple: "/favicon.png",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Harshify - Music Discovery Platform",
+    description: "Discover and explore music from multiple platforms with AI-powered analysis",
+    url: "https://harshify.vercel.app",
+    siteName: "Harshify",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "Harshify - Music Discovery Platform",
+    description: "Discover and explore music from multiple platforms with AI-powered analysis",
   },
 };
 
