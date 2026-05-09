@@ -1,2 +1,2 @@
-/api/*  https://YOUR-BACKEND-API.com/api/:splat  200
+/api/*  https://melody-mentor-api.onrender.com/api/:splat  200
 /*      /index.html  200
