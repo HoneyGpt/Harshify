@@ -5,6 +5,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { setupSocket } from './src/lib/socket';
 import { spawn } from 'child_process';
+import axios from 'axios';
 
 const app = express();
 const server = createServer(app);
@@ -16,10 +17,16 @@ const io = new Server(server, {
   }
 });
 
-const currentPort = 3001; // Use 3001 for API, Vite will proxy to it
-const hostname = '127.0.0.1';
+const currentPort = Number(process.env.PORT) || 3001;
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://melodymentor.netlify.app',
+    'https://melodymentor.mentozy.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // --- Types ---
@@ -56,9 +63,8 @@ const runPythonBridge = (command: string, args: string[]): Promise<any> => {
         return;
       }
       try {
-        // Some commands return JSON, others plain strings
         if (data.trim().startsWith('[') || data.trim().startsWith('{')) {
-          resolve(jsonSafeParse(data));
+          resolve(JSON.parse(data));
         } else {
           resolve(data.trim());
         }
@@ -67,14 +73,6 @@ const runPythonBridge = (command: string, args: string[]): Promise<any> => {
       }
     });
   });
-};
-
-const jsonSafeParse = (str: string) => {
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return str;
-  }
 };
 
 // --- Ported API Logic ---
@@ -123,8 +121,6 @@ app.get('/api/songs', async (req, res) => {
         fetchFromiTunes(query),
         runPythonBridge('search', [query])
       ]);
-      
-      // Combine results, prioritizing YouTube for "full songs"
       songs = [...youtube, ...itunes].slice(0, 30);
     } catch (e) {
       console.error("Search error:", e);
@@ -133,21 +129,34 @@ app.get('/api/songs', async (req, res) => {
   } else {
     songs = getPopularSongs();
   }
-
   res.json({ songs });
 });
 
-// Endpoint to get full audio stream URL
+// Endpoint to stream audio directly through the server (fixes IP mismatch & CORS)
 app.get('/api/stream', async (req, res) => {
   const videoId = req.query.id as string;
   if (!videoId) return res.status(400).json({ error: "Missing video id" });
 
   try {
     const streamUrl = await runPythonBridge('stream', [videoId]);
-    res.json({ url: streamUrl });
+    if (!streamUrl) throw new Error("Failed to resolve stream URL");
+
+    // Proxy the stream to the client
+    const response = await axios({
+      method: 'get',
+      url: streamUrl,
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.youtube.com/'
+      }
+    });
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    response.data.pipe(res);
   } catch (e) {
     console.error("Streaming error:", e);
-    res.status(500).json({ error: "Failed to get stream URL" });
+    res.status(500).json({ error: "Failed to stream audio" });
   }
 });
 
@@ -155,11 +164,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', server: 'express', python: 'active' });
 });
 
-// Setup Socket.IO
 setupSocket(io);
 
-// Start the server
-server.listen(currentPort, hostname, () => {
-  console.log(`> API Server ready on http://${hostname}:${currentPort}`);
-  console.log(`> YouTube Music Bridge active via Python`);
+server.listen(currentPort, () => {
+  console.log(`> API Server ready on port ${currentPort}`);
 });
