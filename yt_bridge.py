@@ -35,31 +35,19 @@ def get_stream_url(video_id):
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        'http_headers': {
-            'Referer': 'https://music.youtube.com/',
-            'Origin': 'https://music.youtube.com/'
-        }
     }
     try:
+        sys.stderr.write(f"Extracting info for: {video_id}\n")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
             if info and 'url' in info:
+                sys.stderr.write("URL resolved successfully\n")
                 return info['url']
+            sys.stderr.write("URL not found in info\n")
             return ""
     except Exception as e:
         sys.stderr.write(f"Extraction error: {str(e)}\n")
         return ""
-
-def debug_info():
-    try:
-        return {
-            "ytmusicapi": "installed",
-            "ytdlp": "installed",
-            "python_version": sys.version,
-            "executable": sys.executable
-        }
-    except Exception as e:
-        return {"error": str(e)}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -78,7 +66,3 @@ if __name__ == "__main__":
         video_id = sys.argv[2]
         url = get_stream_url(video_id)
         sys.stdout.write(url)
-        
-    elif command == "debug":
-        info = debug_info()
-        sys.stdout.write(json.dumps(info))
