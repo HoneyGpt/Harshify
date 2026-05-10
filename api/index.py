@@ -22,14 +22,33 @@ def format_duration(duration_seconds):
         return "0:00"
 
 def map_jiosaavn_to_song(track):
+    image = track.get('image') or track.get('image_url') or ""
+    if image and not image.startswith('http'):
+        image = f"https://c.saavncdn.com/{image.lstrip('/')}"
+    if not image:
+        image = "https://via.placeholder.com/500"
+        
+    if isinstance(image, str):
+        image = image.replace('150x150', '500x500').replace('50x50', '500x500')
+    
+    media_url = track.get('media_url') or track.get('url') or track.get('preview_url') or ""
+    if media_url and not media_url.startswith('http'):
+        media_url = f"https://aac.saavncdn.com/{media_url.lstrip('/')}"
+    
+    # Route through proxy if it's a saavncdn link to bypass CORS/Mixed Content
+    if media_url and 'saavncdn.com' in media_url:
+        # Ensure we don't double-proxy if it's already a proxy URL
+        if not media_url.startswith('/api/audio-proxy'):
+            media_url = f"/api/audio-proxy?url={media_url}"
+
     return {
-        "id": f"jiosaavn_{track.get('id', 'unknown')}",
+        "id": str(track.get('id', 'unknown')),
         "title": track.get('song') or track.get('title') or 'Unknown',
         "artist": track.get('singers') or track.get('primary_artists') or 'Unknown Artist',
         "album": track.get('album') or 'Unknown Album',
         "duration": format_duration(track.get('duration')),
-        "coverUrl": track.get('image') or track.get('image_url') or "https://via.placeholder.com/600",
-        "preview": track.get('media_url') or track.get('url') or "",
+        "coverUrl": image,
+        "preview": media_url,
         "isFavorite": False,
         "source": "jiosaavn"
     }
@@ -63,6 +82,38 @@ def get_stream():
 def health():
     return jsonify({"status": "ok", "server": "serverless-python"})
 
+@app.route('/api/audio-proxy')
+def audio_proxy():
+    url = request.args.get('url')
+    if not url:
+        return "No URL provided", 400
+    
+    try:
+        import requests
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        # Pass the Range header from the client to the upstream server
+        if 'Range' in request.headers:
+            headers['Range'] = request.headers['Range']
+            
+        r = requests.get(url, stream=True, headers=headers)
+        
+        # Build the response with the same status and relevant headers
+        res = app.response_class(
+            r.iter_content(chunk_size=1024*64),
+            status=r.status_code,
+            content_type=r.headers.get('content-type', 'audio/mpeg')
+        )
+        
+        # Relay important headers for seeking
+        for h in ['Content-Range', 'Content-Length', 'Accept-Ranges']:
+            if h in r.headers:
+                res.headers[h] = r.headers[h]
+        
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        return res
+    except Exception as e:
+        return str(e), 500
+
 @app.route('/api/modules')
 def get_modules():
     languages = request.args.get('language', 'english,hindi')
@@ -76,7 +127,17 @@ def get_modules():
     if data:
         # Try different keys for trending songs
         trending_data = data.get('new_trending') or data.get('trending') or data.get('new_albums') or data.get('top_playlists') or []
-        trending = [map_jiosaavn_to_song(t) for t in trending_data if isinstance(t, dict)]
+        for item in trending_data:
+            if not isinstance(item, dict):
+                continue
+            # If it's a song, map it
+            if item.get('type') == 'song' or 'song' in item:
+                trending.append(map_jiosaavn_to_song(item))
+            # If it's an album/playlist, we might need to fetch its songs, 
+            # but for now let's just use the first few items if they are songs.
+            elif item.get('type') in ['album', 'playlist']:
+                # For now, we skip non-song types in the trending grid to avoid broken playback
+                continue
     
     # Fallback 1: Search for trending
     if not trending:
@@ -127,4 +188,4 @@ def get_playlist_songs():
 
 # For local development
 if __name__ == '__main__':
-    app.run(port=3001)
+    app.run(port=3005)
