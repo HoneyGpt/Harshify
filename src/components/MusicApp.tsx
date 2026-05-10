@@ -356,7 +356,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans selection:bg-primary/30 overflow-x-hidden">
+    <div className="min-h-screen bg-black flex font-sans selection:bg-primary/30 overflow-x-hidden text-white">
       {/* Sidebar - Fixed & Clean */}
       <aside className="w-20 lg:w-72 bg-slate-950 text-white hidden md:flex flex-col py-10 px-6 fixed h-full z-40">
         <div className="flex items-center gap-4 mb-16 px-2 cursor-pointer" onClick={onBackToLanding}>
@@ -420,25 +420,25 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 md:ml-20 lg:ml-72 p-6 md:p-12 pb-48">
+      <main className="flex-1 md:ml-20 lg:ml-72 p-4 md:p-12 pb-40 md:pb-48">
         <div className="container mx-auto max-w-7xl">
           {/* Header */}
-          <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-10 mb-16">
+          <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 md:gap-10 mb-8 md:mb-16">
             <div className="space-y-2">
               <p className="text-primary font-black uppercase tracking-[0.4em] text-[8px] md:text-[10px]">{greeting}</p>
-              <h2 className="text-3xl md:text-5xl lg:text-7xl font-black text-slate-950 tracking-tighter leading-none">Melody <span className="text-slate-300">Trending</span></h2>
+              <h2 className="text-3xl md:text-5xl lg:text-7xl font-black text-white tracking-tighter leading-none">Melody <span className="text-slate-600">Trending</span></h2>
             </div>
             
             <div className="relative w-full lg:max-w-xl">
-              <div className="relative flex items-center gap-4 bg-white p-2 rounded-[2rem] shadow-sm border border-slate-100 focus-within:border-primary transition-all">
-                <div className="pl-5"><Search className="w-5 h-5 text-slate-300" /></div>
+              <div className="relative flex items-center gap-4 bg-slate-900 p-2 rounded-[2rem] border border-white/5 focus-within:border-primary transition-all">
+                <div className="pl-5"><Search className="w-5 h-5 text-slate-500" /></div>
                 <input 
                   type="text" 
-                  placeholder="Explore trending music..."
+                  placeholder="Artists, songs, or podcasts"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && searchTracks()}
-                  className="flex-1 py-3 bg-transparent outline-none text-slate-900 font-bold"
+                  className="flex-1 py-3 bg-transparent outline-none text-white font-bold placeholder:text-slate-600"
                 />
                 <Button 
                   onClick={searchTracks}
@@ -456,10 +456,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               <section>
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <div className="bg-indigo-100 p-3 rounded-2xl text-primary">
-                      <Zap className="w-6 h-6 fill-current" />
+                    <div className="bg-primary/20 p-2 md:p-3 rounded-2xl text-primary">
+                      <Zap className="w-5 h-5 md:w-6 md:h-6 fill-current" />
                     </div>
-                    <h3 className="text-3xl font-black text-slate-950 tracking-tight">Trending Now</h3>
+                    <h3 className="text-xl md:text-3xl font-black text-white tracking-tight">Trending Now</h3>
                   </div>
                 </div>
                 <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar -mx-4 px-4 snap-x">
@@ -469,18 +469,18 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05 }}
-                      className="min-w-[280px] snap-start"
+                      className="min-w-[160px] md:min-w-[280px] snap-start"
                       onClick={() => playTrack(track)}
                     >
-                      <Card className="p-4 bg-white border border-slate-100 shadow-sm rounded-[2.5rem] cursor-pointer hover:shadow-2xl transition-all duration-500 group">
-                        <div className="relative aspect-square rounded-[1.8rem] overflow-hidden mb-4">
+                      <Card className="p-3 md:p-4 bg-slate-900 border border-white/5 rounded-[1.5rem] md:rounded-[2.5rem] cursor-pointer hover:bg-slate-800 transition-all duration-500 group">
+                        <div className="relative aspect-square rounded-xl md:rounded-[1.8rem] overflow-hidden mb-3 md:mb-4">
                           <img src={track.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                           <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <Play className="w-12 h-12 text-white fill-current" />
                           </div>
                         </div>
-                        <h4 className="font-black text-slate-900 truncate">{track.title}</h4>
-                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest truncate">{track.artist}</p>
+                        <h4 className="font-black text-white text-sm md:text-base truncate">{track.title}</h4>
+                        <p className="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-widest truncate">{track.artist}</p>
                       </Card>
                     </motion.div>
                   ))}
@@ -490,10 +490,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               <section>
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <div className="bg-amber-100 p-3 rounded-2xl text-amber-600">
-                      <Star className="w-6 h-6 fill-current" />
+                    <div className="bg-amber-500/20 p-2 md:p-3 rounded-2xl text-amber-500">
+                      <Star className="w-5 h-5 md:w-6 md:h-6 fill-current" />
                     </div>
-                    <h3 className="text-3xl font-black text-slate-950 tracking-tight">Top Charts</h3>
+                    <h3 className="text-xl md:text-3xl font-black text-white tracking-tight">Top Charts</h3>
                   </div>
                 </div>
                 <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar -mx-4 px-4 snap-x">
@@ -527,10 +527,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
             <div className="space-y-12">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="bg-indigo-100 p-3 rounded-2xl text-primary">
-                    <TrendingUp className="w-6 h-6" />
+                  <div className="bg-primary/20 p-2 md:p-3 rounded-2xl text-primary">
+                    <TrendingUp className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
-                  <h3 className="text-xl md:text-3xl font-black text-slate-950 tracking-tight">
+                  <h3 className="text-xl md:text-3xl font-black text-white tracking-tight">
                     {currentView === 'favorites' ? 'Library' : 
                      currentView === 'queue' ? 'Play Queue' :
                      currentView === 'playlist' ? (playlists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist') :
@@ -540,11 +540,11 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               </div>
 
               {loading ? (
-                <div className="grid gap-6 md:gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-4 md:gap-10 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {[...Array(8)].map((_, i) => <CardSkeleton key={i} />)}
                 </div>
               ) : (
-                <div className="grid gap-6 md:gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-4 md:gap-10 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   <AnimatePresence>
                     {(currentView === 'favorites' 
                       ? tracks.filter(t => t.isFavorite) 
@@ -561,8 +561,8 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                         className="group"
                         onClick={() => playTrack(track)}
                       >
-                        <Card className="p-4 bg-white border border-slate-100 shadow-[0_10px_40px_rgb(0,0,0,0.02)] rounded-[2.5rem] cursor-pointer group-hover:border-primary/30 group-hover:shadow-2xl transition-all duration-500 overflow-hidden relative h-full flex flex-col">
-                          <div className="relative aspect-square rounded-[1.8rem] overflow-hidden mb-5 bg-slate-50 flex-shrink-0">
+                        <Card className="p-3 md:p-4 bg-slate-900 border border-white/5 rounded-2xl md:rounded-[2.5rem] cursor-pointer hover:bg-slate-800 transition-all duration-500 overflow-hidden relative h-full flex flex-col">
+                          <div className="relative aspect-square rounded-xl md:rounded-[1.8rem] overflow-hidden mb-3 md:mb-5 bg-slate-800 flex-shrink-0">
                             <img 
                               src={track.coverUrl || DEFAULT_COVER} 
                               alt={track.title} 
@@ -604,11 +604,11 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start gap-4 mb-1">
-                              <h4 className="font-black text-slate-900 text-lg truncate tracking-tight">{track.title}</h4>
-                              <span className="text-[10px] font-black text-slate-300 whitespace-nowrap mt-1.5">{track.duration}</span>
+                            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-1 md:gap-4 mb-1">
+                              <h4 className="font-black text-white text-sm md:text-lg truncate tracking-tight">{track.title}</h4>
+                              <span className="text-[10px] font-black text-slate-500 whitespace-nowrap">{track.duration}</span>
                             </div>
-                            <p className="text-slate-400 font-bold text-xs truncate uppercase tracking-widest leading-none">{track.artist}</p>
+                            <p className="text-slate-500 font-bold text-[10px] md:text-xs truncate uppercase tracking-widest leading-none">{track.artist}</p>
                           </div>
                         </Card>
                       </motion.div>
@@ -621,15 +621,15 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
 
           {/* Empty State */}
           {!loading && currentView === 'favorites' && tracks.filter(t => t.isFavorite).length === 0 && (
-            <div className="text-center py-40 bg-white rounded-[4rem] border border-slate-100 shadow-sm relative overflow-hidden">
-               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.03),transparent_70%)]" />
+            <div className="text-center py-40 bg-slate-900 rounded-[2.5rem] md:rounded-[4rem] border border-white/5 relative overflow-hidden">
+               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.05),transparent_70%)]" />
                <div className="relative z-10">
-                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8">
-                   <Heart className="w-10 h-10 text-slate-200" />
+                 <div className="w-20 h-20 md:w-24 md:h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
+                   <Heart className="w-8 h-8 md:w-10 md:h-10 text-slate-700" />
                  </div>
-                 <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Your library is empty.</h3>
-                 <p className="text-slate-400 mb-10 max-w-sm mx-auto font-medium text-lg">Archive your favorite trending hits to build your personal collection.</p>
-                 <Button onClick={() => {setCurrentView('trending'); loadTrending();}} className="bg-primary text-white rounded-2xl px-12 py-7 font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-2xl">Explore Trending</Button>
+                 <h3 className="text-2xl md:text-3xl font-black text-white mb-4 tracking-tight">Your library is empty.</h3>
+                 <p className="text-slate-500 mb-10 max-w-sm mx-auto font-medium text-base md:text-lg">Add songs to your library to see them here.</p>
+                 <Button onClick={() => {setCurrentView('trending'); loadTrending();}} className="bg-primary text-white rounded-full px-12 py-7 font-black text-sm uppercase tracking-widest hover:scale-105 transition-transform">Explore Trending</Button>
                </div>
             </div>
           )}
@@ -641,50 +641,52 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         <motion.div 
           initial={{ y: 100 }}
           animate={{ y: 0 }}
-          className="fixed bottom-4 left-4 right-4 md:bottom-6 md:left-[calc(5rem+1.5rem)] lg:left-[calc(18rem+1.5rem)] z-50 bg-slate-950/95 backdrop-blur-xl p-3 md:p-6 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-white/10"
+          className="fixed bottom-[4.5rem] md:bottom-6 left-2 right-2 md:left-[calc(5rem+1.5rem)] lg:left-[calc(18rem+1.5rem)] z-50 bg-slate-900/90 backdrop-blur-xl p-2 md:p-6 rounded-xl md:rounded-[2.5rem] shadow-2xl border border-white/10"
         >
-          <div className="flex items-center gap-3 md:gap-6">
+          <div className="flex items-center gap-2 md:gap-6">
             <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1 md:flex-initial md:min-w-[200px] md:max-w-[300px]">
-              <img src={current.coverUrl || DEFAULT_COVER} className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl object-cover shadow-lg border border-white/5" alt="" />
+              <img src={current.coverUrl || DEFAULT_COVER} className="w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-2xl object-cover shadow-lg" alt="" />
               <div className="min-w-0 flex-1">
-                <h5 className="font-black text-white truncate text-sm md:text-lg tracking-tight leading-none mb-1">{current.title}</h5>
-                <p className="text-slate-500 truncate font-bold text-[10px] uppercase tracking-[0.1em]">{current.artist}</p>
+                <h5 className="font-black text-white truncate text-xs md:text-lg tracking-tight leading-none mb-1">{current.title}</h5>
+                <p className="text-slate-500 truncate font-bold text-[9px] md:text-xs uppercase tracking-[0.1em]">{current.artist}</p>
               </div>
             </div>
             
-            <div className="flex-1 flex flex-col gap-1 md:gap-3 px-0 md:px-10">
-              <div className="flex items-center justify-center gap-2 md:gap-8">
+            <div className="flex md:flex-1 flex-col gap-1 md:gap-3 px-0 md:px-10">
+              <div className="flex items-center justify-end md:justify-center gap-2 md:gap-8">
                 <Button 
                   onClick={() => setShuffle(!shuffle)} 
                   variant="ghost" 
-                  className={`hidden sm:flex transition-colors ${shuffle ? 'text-primary' : 'text-slate-600 hover:text-white'}`}
+                  size="icon"
+                  className={`hidden md:flex transition-colors ${shuffle ? 'text-primary' : 'text-slate-600 hover:text-white'}`}
                 >
                   <Shuffle className="w-5 h-5" />
                 </Button>
                 
-                <Button onClick={playPrevious} variant="ghost" className="text-slate-400 hover:text-white"><SkipBack className="w-6 h-6 fill-current" /></Button>
+                <Button onClick={playPrevious} variant="ghost" size="icon" className="text-slate-500 hover:text-white hidden md:flex"><SkipBack className="w-6 h-6 fill-current" /></Button>
                 
                 <Button 
                   size="icon" 
                   onClick={togglePlayPause} 
-                  className="bg-white text-slate-950 hover:bg-slate-200 rounded-xl md:rounded-2xl w-10 h-10 md:w-14 md:h-14 shadow-2xl transition-all active:scale-95 flex-shrink-0"
+                  className="bg-white text-slate-950 hover:bg-slate-200 rounded-full w-9 h-9 md:w-14 md:h-14 shadow-2xl transition-all active:scale-95 flex-shrink-0"
                   disabled={resolvingStream}
                 >
                   {resolvingStream ? <Loader2 className="w-4 h-4 md:w-6 md:h-6 animate-spin text-primary" /> : (isPlaying ? <Pause className="w-4 h-4 md:w-6 md:h-6 fill-current" /> : <Play className="w-4 h-4 md:w-6 md:h-6 fill-current ml-1" />)}
                 </Button>
                 
-                <Button onClick={playNext} variant="ghost" className="text-slate-400 hover:text-white"><SkipForward className="w-6 h-6 fill-current" /></Button>
+                <Button onClick={playNext} variant="ghost" size="icon" className="text-slate-500 hover:text-white"><SkipForward className="w-5 h-5 md:w-6 md:h-6 fill-current" /></Button>
                 
                 <Button 
                   onClick={() => setRepeat(repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off')} 
                   variant="ghost" 
-                  className={`hidden sm:flex transition-colors relative ${repeat !== 'off' ? 'text-primary' : 'text-slate-600 hover:text-white'}`}
+                  size="icon"
+                  className={`hidden md:flex transition-colors relative ${repeat !== 'off' ? 'text-primary' : 'text-slate-600 hover:text-white'}`}
                 >
                   <Repeat className="w-5 h-5" />
                   {repeat === 'one' && <span className="absolute -top-1 -right-1 bg-primary text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center text-white border-2 border-slate-950">1</span>}
                 </Button>
               </div>
-              <div className="flex items-center gap-4 px-2">
+              <div className="hidden md:flex items-center gap-4 px-2">
                 <span className="text-[10px] font-black text-slate-600 tabular-nums w-10 text-right">{formatTime(currentTime)}</span>
                 <div className="flex-1 relative h-1 bg-white/10 rounded-full group overflow-hidden">
                   <div className="absolute top-0 left-0 h-full bg-primary rounded-full shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
@@ -705,7 +707,29 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               </Button>
             </div>
           </div>
+          {/* Mobile Progress Bar (Mini) */}
+          <div className="md:hidden absolute bottom-0 left-0 right-0 h-[2px] bg-white/10">
+             <div className="h-full bg-white transition-all" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
+          </div>
         </motion.div>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-black/95 backdrop-blur-lg border-t border-white/5 flex md:hidden items-center justify-around z-[60] px-4">
+          {[
+            { icon: <Home className="w-6 h-6" />, label: 'Home', active: currentView === 'trending', onClick: () => setCurrentView('trending') },
+            { icon: <Search className="w-6 h-6" />, label: 'Search', active: false, onClick: () => { setCurrentView('trending'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+            { icon: <ListMusic className="w-6 h-6" />, label: 'Library', active: currentView === 'favorites' || currentView === 'playlist', onClick: () => setCurrentView('favorites') },
+          ].map((item, i) => (
+            <button 
+              key={i} 
+              onClick={item.onClick}
+              className={`flex flex-col items-center gap-1 transition-colors ${item.active ? 'text-white' : 'text-slate-500'}`}
+            >
+              {item.icon}
+              <span className="text-[10px] font-bold">{item.label}</span>
+            </button>
+          ))}
+        </nav>
       )}
 
       <audio ref={audioRef} />

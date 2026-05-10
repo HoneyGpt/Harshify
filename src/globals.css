@@ -17,27 +17,27 @@
 }
 
 :root {
-  /* MelodyMentor Aesthetic: Vibrant Purple and Sleek Indigo */
-  --background: #FFFFFF;
-  --foreground: #0F172A;
+  /* MelodyMentor Aesthetic: Spotify-inspired Deep Black */
+  --background: #000000;
+  --foreground: #FFFFFF;
   
   --primary: #4F46E5; /* Indigo 600 */
   --primary-foreground: #FFFFFF;
   
-  --accent: #F43F5E; /* Rose 500 for a vibrant "Mentor" look */
+  --accent: #F43F5E;
   --accent-foreground: #FFFFFF;
   
-  --secondary: #F8FAFC;
-  --secondary-foreground: #475569;
+  --secondary: #0F172A;
+  --secondary-foreground: #94A3B8;
   
-  --muted: #F1F5F9;
+  --muted: #1E293B;
   --muted-foreground: #64748B;
   
-  --border: #E2E8F0;
-  --input: #E2E8F0;
+  --border: #1E293B;
+  --input: #1E293B;
   --ring: #4F46E5;
   
-  --radius: 1rem;
+  --radius: 1.5rem;
 
   /* Custom colors for MelodyMentor */
   --brand-indigo: #4F46E5;
