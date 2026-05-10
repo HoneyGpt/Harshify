@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, Heart, X, Share2, Info, ListMusic, Volume2, Sparkles, Clock, Globe, Shield, TrendingUp, Zap } from 'lucide-react'
+import { Play, Heart, X, Share2, Info, ListMusic, Volume2, Sparkles, Clock, Globe, Shield, TrendingUp, Zap, Plus, SkipForward } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface Song {
@@ -15,16 +15,27 @@ interface Song {
   source: string
 }
 
+interface Playlist {
+  id: string
+  name: string
+  songs: Song[]
+}
+
 interface SongFloatingCardProps {
   song: Song
   isOpen: boolean
   onClose: () => void
   onPlay: (previewUrl: string) => void
   onToggleFavorite: (songId: string) => void
+  onAddToQueue: (song: Song) => void
+  onAddToPlayNext: (song: Song) => void
+  onAddToPlaylist: (playlistId: string, song: Song) => void
+  playlists: Playlist[]
 }
 
-export default function SongFloatingCard({ song, isOpen, onClose, onPlay, onToggleFavorite }: SongFloatingCardProps) {
+export default function SongFloatingCard({ song, isOpen, onClose, onPlay, onToggleFavorite, onAddToQueue, onAddToPlayNext, onAddToPlaylist, playlists }: SongFloatingCardProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'analytics'>('details')
+  const [showPlaylistSelector, setShowPlaylistSelector] = useState(false)
 
   if (!song) return null
 
@@ -63,20 +74,78 @@ export default function SongFloatingCard({ song, isOpen, onClose, onPlay, onTogg
                 <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
 
-              <div className="flex gap-4 w-full">
+              <div className="flex flex-col gap-4 w-full">
                 <Button 
                   onClick={() => onPlay(song.preview)}
-                  className="flex-1 bg-primary text-white rounded-[1.5rem] py-8 text-lg font-black shadow-xl shadow-indigo-200 hover:bg-indigo-700 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                  className="w-full bg-primary text-white rounded-[1.5rem] py-8 text-lg font-black shadow-xl shadow-indigo-200 hover:bg-indigo-700 flex items-center justify-center gap-3 active:scale-95 transition-all"
                 >
                   <Play className="w-6 h-6 fill-current" /> Play Now
                 </Button>
-                <Button
-                  onClick={() => onToggleFavorite(song.id)}
-                  variant="outline"
-                  className={`w-20 rounded-[1.5rem] border-2 transition-all ${song.isFavorite ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white border-slate-200 text-slate-300 hover:border-rose-500 hover:text-rose-500'}`}
-                >
-                  <Heart className={`w-6 h-6 ${song.isFavorite ? 'fill-current' : ''}`} />
-                </Button>
+                
+                <div className="flex gap-4">
+                  <Button
+                    onClick={() => onToggleFavorite(song.id)}
+                    variant="outline"
+                    title="Favorite"
+                    className={`flex-1 h-16 rounded-[1.2rem] border-2 transition-all ${song.isFavorite ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white border-slate-200 text-slate-300 hover:border-rose-500 hover:text-rose-500'}`}
+                  >
+                    <Heart className={`w-6 h-6 ${song.isFavorite ? 'fill-current' : ''}`} />
+                  </Button>
+                  <Button
+                    onClick={() => onAddToQueue(song)}
+                    variant="outline"
+                    title="Add to Queue"
+                    className="flex-1 h-16 rounded-[1.2rem] border-2 bg-white border-slate-200 text-slate-300 hover:border-primary hover:text-primary transition-all"
+                  >
+                    <ListMusic className="w-6 h-6" />
+                  </Button>
+                  <Button
+                    onClick={() => onAddToPlayNext(song)}
+                    variant="outline"
+                    title="Play Next"
+                    className="flex-1 h-16 rounded-[1.2rem] border-2 bg-white border-slate-200 text-slate-300 hover:border-primary hover:text-primary transition-all"
+                  >
+                    <SkipForward className="w-6 h-6" />
+                  </Button>
+                </div>
+
+                <div className="relative">
+                  <Button
+                    onClick={() => setShowPlaylistSelector(!showPlaylistSelector)}
+                    variant="outline"
+                    className="w-full h-16 rounded-[1.2rem] border-2 bg-white border-slate-200 text-slate-300 hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" /> Add to Playlist
+                  </Button>
+
+                  <AnimatePresence>
+                    {showPlaylistSelector && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-30"
+                      >
+                        {playlists.length === 0 ? (
+                          <div className="p-4 text-xs font-bold text-slate-400 text-center">No playlists created</div>
+                        ) : (
+                          playlists.map(p => (
+                            <button
+                              key={p.id}
+                              onClick={() => {
+                                onAddToPlaylist(p.id, song);
+                                setShowPlaylistSelector(false);
+                              }}
+                              className="w-full p-4 text-left text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"
+                            >
+                              {p.name}
+                            </button>
+                          ))
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
 

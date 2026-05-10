@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Play, Heart, Sparkles, Music, Pause, Star, Volume2, ListMusic, Home, LayoutGrid, Settings, LogOut, ChevronRight, Mic2, Loader2, TrendingUp, Bell, PlayCircle, Globe, Zap } from 'lucide-react'
+import { Search, Play, Heart, Sparkles, Music, Pause, Star, Volume2, ListMusic, Home, LayoutGrid, Settings, LogOut, ChevronRight, Mic2, Loader2, TrendingUp, Bell, PlayCircle, Globe, Zap, SkipForward, SkipBack, Plus, Shuffle, Repeat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import SongFloatingCard from '@/components/SongFloatingCard'
@@ -15,6 +15,20 @@ interface Song {
   preview: string
   isFavorite: boolean
   source: string
+}
+
+interface Playlist {
+  id: string
+  name: string
+  songs: Song[]
+}
+
+interface Chart {
+  id: string
+  title: string
+  image: string
+  subtitle: string
+  type: string
 }
 
 interface MusicAppProps {
@@ -34,15 +48,22 @@ const CardSkeleton = () => (
 
 export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   const [tracks, setTracks] = useState<Song[]>([])
+  const [trendingSongs, setTrendingSongs] = useState<Song[]>([])
+  const [topCharts, setTopCharts] = useState<Chart[]>([])
   const [search, setSearch] = useState("")
   const [current, setCurrent] = useState<Song | null>(null)
   const [loading, setLoading] = useState(false)
   const [greeting, setGreeting] = useState('')
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [isPlaying, setIsPlaying] = useState(false)
+  const [shuffle, setShuffle] = useState(false)
+  const [repeat, setRepeat] = useState<'off' | 'one' | 'all'>('off')
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [currentView, setCurrentView] = useState<'trending' | 'favorites'>('trending')
+  const [currentView, setCurrentView] = useState<'trending' | 'favorites' | 'playlist' | 'queue'>('trending')
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
+  const [playlists, setPlaylists] = useState<Playlist[]>([])
+  const [queue, setQueue] = useState<Song[]>([])
   const [selectedSong, setSelectedSong] = useState<Song | null>(null)
   const [isFloatingCardOpen, setIsFloatingCardOpen] = useState(false)
   const [resolvingStream, setResolvingStream] = useState(false)
@@ -51,7 +72,20 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   useEffect(() => {
     const savedFavorites = localStorage.getItem('melody-mentor-favorites')
     if (savedFavorites) {
-      setFavorites(new Set(JSON.parse(savedFavorites)))
+      try {
+        setFavorites(new Set(JSON.parse(savedFavorites) || []))
+      } catch (e) {
+        setFavorites(new Set())
+      }
+    }
+
+    const savedPlaylists = localStorage.getItem('melody-mentor-playlists')
+    if (savedPlaylists) {
+      try {
+        setPlaylists(JSON.parse(savedPlaylists) || [])
+      } catch (e) {
+        setPlaylists([])
+      }
     }
     
     const hour = new Date().getHours()
@@ -65,6 +99,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   useEffect(() => {
     localStorage.setItem('melody-mentor-favorites', JSON.stringify(Array.from(favorites)))
   }, [favorites])
+
+  useEffect(() => {
+    localStorage.setItem('melody-mentor-playlists', JSON.stringify(playlists))
+  }, [playlists])
 
   useEffect(() => {
     if ('mediaSession' in navigator && current) {
@@ -85,23 +123,53 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         audioRef.current?.pause();
         setIsPlaying(false);
       });
+      navigator.mediaSession.setActionHandler('previoustrack', playPrevious);
+      navigator.mediaSession.setActionHandler('nexttrack', playNext);
     }
   }, [current]);
 
   const loadTrending = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/songs?search=${encodeURIComponent('trending english')}`)
+      const res = await fetch(`/api/modules?language=english,hindi`)
+      const data = await res.json()
+      
+      const trendingWithFavorites = (data.trending || []).map((track: Song) => ({
+        ...track,
+        isFavorite: favorites.has(track.id)
+      }))
+      
+      setTrendingSongs(trendingWithFavorites)
+      setTopCharts(data.charts || [])
+      setTracks(trendingWithFavorites)
+      
+      if (queue.length === 0) setQueue(trendingWithFavorites)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setTimeout(() => setLoading(false), 300)
+    }
+  }
+
+  const loadChart = async (chartId: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/playlist?id=${chartId}`)
       const data = await res.json()
       const tracksWithFavorites = data.songs.map((track: Song) => ({
         ...track,
         isFavorite: favorites.has(track.id)
       }))
       setTracks(tracksWithFavorites)
+      setCurrentView('trending')
+      if (tracksWithFavorites.length > 0) {
+        setQueue(tracksWithFavorites)
+        playTrack(tracksWithFavorites[0])
+      }
     } catch (err) {
       console.error(err)
     } finally {
-      setTimeout(() => setLoading(false), 300)
+      setLoading(false)
     }
   }
 
@@ -140,10 +208,86 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     ))
   }
 
+  const createPlaylist = () => {
+    const name = prompt("Enter playlist name:")
+    if (name) {
+      const newPlaylist: Playlist = {
+        id: Math.random().toString(36).substr(2, 9),
+        name,
+        songs: []
+      }
+      setPlaylists([...playlists, newPlaylist])
+    }
+  }
+
+  const addToPlaylist = (playlistId: string, song: Song) => {
+    setPlaylists(playlists.map(p => {
+      if (p.id === playlistId && !p.songs.find(s => s.id === song.id)) {
+        return { ...p, songs: [...p.songs, song] }
+      }
+      return p
+    }))
+  }
+
+  const addToQueue = (song: Song) => {
+    if (!queue.find(s => s.id === song.id)) {
+      setQueue([...queue, song])
+    }
+  }
+
+  const addToPlayNext = (song: Song) => {
+    // If already in queue, remove it first to re-insert
+    const filteredQueue = queue.filter(s => s.id !== song.id)
+    if (!current) {
+      setQueue([song, ...filteredQueue])
+    } else {
+      const currentIndex = filteredQueue.findIndex(s => s.id === current.id)
+      const newQueue = [...filteredQueue]
+      newQueue.splice(currentIndex + 1, 0, song)
+      setQueue(newQueue)
+    }
+  }
+
+  const playNext = () => {
+    if (!current || queue.length === 0) return
+    
+    if (repeat === 'one') {
+      audioRef.current!.currentTime = 0
+      audioRef.current!.play()
+      return
+    }
+
+    let nextIndex
+    if (shuffle) {
+      nextIndex = Math.floor(Math.random() * queue.length)
+    } else {
+      const currentIndex = queue.findIndex(s => s.id === current.id)
+      nextIndex = currentIndex + 1
+      if (nextIndex >= queue.length) {
+        if (repeat === 'all') nextIndex = 0
+        else return
+      }
+    }
+    playTrack(queue[nextIndex])
+  }
+
+  const playPrevious = () => {
+    if (!current || queue.length === 0) return
+    const currentIndex = queue.findIndex(s => s.id === current.id)
+    let prevIndex = currentIndex - 1
+    if (prevIndex < 0) {
+      if (repeat === 'all') prevIndex = queue.length - 1
+      else prevIndex = 0
+    }
+    playTrack(queue[prevIndex])
+  }
+
   const playTrack = (track: Song) => {
     setSelectedSong(track)
-    setIsFloatingCardOpen(true)
-    // Play immediately when clicking the card
+    // If not in queue, add it
+    if (!queue.find(s => s.id === track.id)) {
+      setQueue([...queue, track])
+    }
     playPreview(track.preview, track)
   }
 
@@ -186,8 +330,12 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
       const handleLoadedMetadata = () => setDuration(audio.duration)
       const handleEnded = () => {
-        setIsPlaying(false)
-        setCurrentTime(0)
+        if (repeat === 'one') {
+          audio.currentTime = 0
+          audio.play()
+        } else {
+          playNext()
+        }
       }
       audio.addEventListener('timeupdate', handleTimeUpdate)
       audio.addEventListener('loadedmetadata', handleLoadedMetadata)
@@ -198,7 +346,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         audio.removeEventListener('ended', handleEnded)
       }
     }
-  }, [current])
+  }, [current, queue, repeat, shuffle])
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00'
@@ -221,10 +369,11 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
           </div>
         </div>
 
-        <nav className="space-y-4 flex-1">
+        <nav className="space-y-4 flex-1 overflow-y-auto no-scrollbar">
           {[
             { icon: <TrendingUp className="w-5 h-5" />, label: 'Trending', active: currentView === 'trending', onClick: () => setCurrentView('trending') },
             { icon: <Heart className="w-5 h-5" />, label: 'Library', active: currentView === 'favorites', onClick: () => setCurrentView('favorites') },
+            { icon: <ListMusic className="w-5 h-5" />, label: 'Queue', active: currentView === 'queue', onClick: () => setCurrentView('queue') },
           ].map((item, i) => (
             <button 
               key={i}
@@ -235,6 +384,30 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               <span className="hidden lg:block">{item.label}</span>
             </button>
           ))}
+
+          <div className="pt-8 pb-4">
+             <div className="flex items-center justify-between px-4 mb-4">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] hidden lg:block">Playlists</span>
+                <button onClick={createPlaylist} className="text-slate-500 hover:text-primary transition-colors">
+                  <Plus className="w-4 h-4" />
+                </button>
+             </div>
+             <div className="space-y-2">
+                {playlists.map(playlist => (
+                  <button 
+                    key={playlist.id}
+                    onClick={() => {
+                      setSelectedPlaylistId(playlist.id);
+                      setCurrentView('playlist');
+                    }}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${currentView === 'playlist' && selectedPlaylistId === playlist.id ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-white'}`}
+                  >
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="hidden lg:block truncate">{playlist.name}</span>
+                  </button>
+                ))}
+             </div>
+          </div>
         </nav>
 
         <button 
@@ -277,84 +450,172 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
             </div>
           </header>
 
-          {/* Unified Grid - Focusing solely on Trending by default */}
-          <div className="flex items-center justify-between mb-12">
-            <div className="flex items-center gap-4">
-              <div className="bg-indigo-100 p-3 rounded-2xl text-primary">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-              <h3 className="text-3xl font-black text-slate-950 tracking-tight">
-                {currentView === 'favorites' ? 'Library' : search.trim() ? `Search Results: ${search}` : 'Trending Hits'}
-              </h3>
-            </div>
-            <div className="flex items-center gap-3 bg-white px-5 py-2 rounded-full border border-slate-100 shadow-sm">
-               <Zap className="w-4 h-4 text-primary fill-current animate-pulse" />
-               <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Unrestricted Streaming</span>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[...Array(8)].map((_, i) => <CardSkeleton key={i} />)}
-            </div>
-          ) : (
-            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <AnimatePresence>
-                {(currentView === 'favorites' 
-                  ? tracks.filter(t => t.isFavorite) 
-                  : tracks
-                ).map((track, i) => (
-                  <motion.div
-                    key={track.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="group"
-                    onClick={() => playTrack(track)}
-                  >
-                    <Card className="p-4 bg-white border border-slate-100 shadow-[0_10px_40px_rgb(0,0,0,0.02)] rounded-[2.5rem] cursor-pointer group-hover:border-primary/30 group-hover:shadow-2xl transition-all duration-500 overflow-hidden relative h-full flex flex-col">
-                      <div className="relative aspect-square rounded-[1.8rem] overflow-hidden mb-5 bg-slate-50 flex-shrink-0">
-                        <img 
-                          src={track.coverUrl || DEFAULT_COVER} 
-                          alt={track.title} 
-                          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                          onError={(e) => {(e.target as HTMLImageElement).src = DEFAULT_COVER;}}
-                        />
-                        <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-[2px]">
-                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary shadow-2xl">
-                            <Play className="w-8 h-8 fill-current ml-1" />
+          {/* Home Discovery (Trending & Charts) */}
+          {!loading && !search.trim() && currentView === 'trending' && (
+            <div className="space-y-16">
+              <section>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-indigo-100 p-3 rounded-2xl text-primary">
+                      <Zap className="w-6 h-6 fill-current" />
+                    </div>
+                    <h3 className="text-3xl font-black text-slate-950 tracking-tight">Trending Now</h3>
+                  </div>
+                </div>
+                <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar -mx-4 px-4 snap-x">
+                  {trendingSongs.map((track, i) => (
+                    <motion.div
+                      key={track.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="min-w-[280px] snap-start"
+                      onClick={() => playTrack(track)}
+                    >
+                      <Card className="p-4 bg-white border border-slate-100 shadow-sm rounded-[2.5rem] cursor-pointer hover:shadow-2xl transition-all duration-500 group">
+                        <div className="relative aspect-square rounded-[1.8rem] overflow-hidden mb-4">
+                          <img src={track.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                          <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Play className="w-12 h-12 text-white fill-current" />
                           </div>
                         </div>
-                        {/* Rank Badge for trending feel */}
-                        <div className="absolute top-4 left-4 bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
-                          #{i + 1}
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-4 mb-1">
-                          <h4 className="font-black text-slate-900 text-lg truncate tracking-tight">{track.title}</h4>
-                          <span className="text-[10px] font-black text-slate-300 whitespace-nowrap mt-1.5">{track.duration}</span>
-                        </div>
-                        <p className="text-slate-400 font-bold text-xs truncate uppercase tracking-widest leading-none">{track.artist}</p>
-                      </div>
+                        <h4 className="font-black text-slate-900 truncate">{track.title}</h4>
+                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest truncate">{track.artist}</p>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
 
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className={`absolute top-6 right-6 rounded-full w-10 h-10 transition-all ${track.isFavorite ? 'bg-primary text-white shadow-lg' : 'bg-white/90 text-slate-300 hover:text-primary'}`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleFavorite(track.id)
-                        }}
+              <section>
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-amber-100 p-3 rounded-2xl text-amber-600">
+                      <Star className="w-6 h-6 fill-current" />
+                    </div>
+                    <h3 className="text-3xl font-black text-slate-950 tracking-tight">Top Charts</h3>
+                  </div>
+                </div>
+                <div className="flex gap-6 overflow-x-auto pb-8 no-scrollbar -mx-4 px-4 snap-x">
+                  {topCharts.map((chart, i) => (
+                    <motion.div
+                      key={chart.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 + 0.3 }}
+                      className="min-w-[200px] snap-start"
+                      onClick={() => loadChart(chart.id)}
+                    >
+                      <div className="group cursor-pointer">
+                        <div className="relative aspect-square rounded-[2.5rem] overflow-hidden mb-4 shadow-lg border border-slate-100">
+                          <img src={chart.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent opacity-60" />
+                          <div className="absolute bottom-6 left-6 right-6">
+                            <h4 className="text-white font-black text-lg leading-tight">{chart.title}</h4>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Search Results / Library / Queue View */}
+          {(loading || search.trim() || currentView !== 'trending') && (
+            <div className="space-y-12">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-indigo-100 p-3 rounded-2xl text-primary">
+                    <TrendingUp className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-3xl font-black text-slate-950 tracking-tight">
+                    {currentView === 'favorites' ? 'Library' : 
+                     currentView === 'queue' ? 'Play Queue' :
+                     currentView === 'playlist' ? (playlists.find(p => p.id === selectedPlaylistId)?.name || 'Playlist') :
+                     search.trim() ? `Search Results: ${search}` : 'Trending Hits'}
+                  </h3>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {[...Array(8)].map((_, i) => <CardSkeleton key={i} />)}
+                </div>
+              ) : (
+                <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <AnimatePresence>
+                    {(currentView === 'favorites' 
+                      ? tracks.filter(t => t.isFavorite) 
+                      : currentView === 'queue' ? queue
+                      : currentView === 'playlist' ? (playlists.find(p => p.id === selectedPlaylistId)?.songs || [])
+                      : tracks
+                    ).map((track, i) => (
+                      <motion.div
+                        key={track.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="group"
+                        onClick={() => playTrack(track)}
                       >
-                        <Heart className={`w-5 h-5 ${track.isFavorite ? 'fill-current' : ''}`} />
-                      </Button>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                        <Card className="p-4 bg-white border border-slate-100 shadow-[0_10px_40px_rgb(0,0,0,0.02)] rounded-[2.5rem] cursor-pointer group-hover:border-primary/30 group-hover:shadow-2xl transition-all duration-500 overflow-hidden relative h-full flex flex-col">
+                          <div className="relative aspect-square rounded-[1.8rem] overflow-hidden mb-5 bg-slate-50 flex-shrink-0">
+                            <img 
+                              src={track.coverUrl || DEFAULT_COVER} 
+                              alt={track.title} 
+                              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                              onError={(e) => {(e.target as HTMLImageElement).src = DEFAULT_COVER;}}
+                            />
+                            <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-[2px]">
+                              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary shadow-2xl">
+                                <Play className="w-8 h-8 fill-current ml-1" />
+                              </div>
+                            </div>
+                            <div className="absolute top-4 left-4 bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg z-10">
+                              #{i + 1}
+                            </div>
+                            <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className={`rounded-full w-10 h-10 shadow-xl ${track.isFavorite ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-primary'}`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleFavorite(track.id)
+                                }}
+                              >
+                                <Heart className={`w-5 h-5 ${track.isFavorite ? 'fill-current' : ''}`} />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="rounded-full w-10 h-10 bg-white text-slate-400 hover:text-primary shadow-xl"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  addToPlayNext(track)
+                                }}
+                                title="Play Next"
+                              >
+                                <ListMusic className="w-5 h-5" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start gap-4 mb-1">
+                              <h4 className="font-black text-slate-900 text-lg truncate tracking-tight">{track.title}</h4>
+                              <span className="text-[10px] font-black text-slate-300 whitespace-nowrap mt-1.5">{track.duration}</span>
+                            </div>
+                            <p className="text-slate-400 font-bold text-xs truncate uppercase tracking-widest leading-none">{track.artist}</p>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           )}
 
@@ -391,35 +652,62 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               </div>
             </div>
             
-            <div className="flex-1 flex flex-col gap-3">
-              <div className="flex items-center justify-center gap-8">
-                <Button variant="ghost" className="text-slate-600 hover:text-white hidden sm:flex"><Star className="w-5 h-5" /></Button>
+            <div className="flex-1 flex flex-col gap-3 px-4 md:px-10">
+              <div className="flex items-center justify-center gap-4 md:gap-8">
+                <Button 
+                  onClick={() => setShuffle(!shuffle)} 
+                  variant="ghost" 
+                  className={`hidden sm:flex transition-colors ${shuffle ? 'text-primary' : 'text-slate-600 hover:text-white'}`}
+                >
+                  <Shuffle className="w-5 h-5" />
+                </Button>
+                
+                <Button onClick={playPrevious} variant="ghost" className="text-slate-400 hover:text-white"><SkipBack className="w-6 h-6 fill-current" /></Button>
+                
                 <Button 
                   size="icon" 
                   onClick={togglePlayPause} 
-                  className="bg-white text-slate-950 hover:bg-slate-200 rounded-2xl w-14 h-14 shadow-2xl transition-all"
+                  className="bg-white text-slate-950 hover:bg-slate-200 rounded-2xl w-14 h-14 shadow-2xl transition-all active:scale-95"
                   disabled={resolvingStream}
                 >
                   {resolvingStream ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : (isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-1" />)}
                 </Button>
-                <Button variant="ghost" className="text-slate-600 hover:text-white hidden sm:flex"><Volume2 className="w-5 h-5" /></Button>
+                
+                <Button onClick={playNext} variant="ghost" className="text-slate-400 hover:text-white"><SkipForward className="w-6 h-6 fill-current" /></Button>
+                
+                <Button 
+                  onClick={() => setRepeat(repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off')} 
+                  variant="ghost" 
+                  className={`hidden sm:flex transition-colors relative ${repeat !== 'off' ? 'text-primary' : 'text-slate-600 hover:text-white'}`}
+                >
+                  <Repeat className="w-5 h-5" />
+                  {repeat === 'one' && <span className="absolute -top-1 -right-1 bg-primary text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center text-white border-2 border-slate-950">1</span>}
+                </Button>
               </div>
               <div className="flex items-center gap-4 px-2">
                 <span className="text-[10px] font-black text-slate-600 tabular-nums w-10 text-right">{formatTime(currentTime)}</span>
                 <div className="flex-1 relative h-1 bg-white/10 rounded-full group overflow-hidden">
-                  <div className="absolute top-0 left-0 h-full bg-primary rounded-full shadow-[0_0_15px_rgba(79,70,229,0.5)]" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
+                  <div className="absolute top-0 left-0 h-full bg-primary rounded-full shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
                   <input type="range" min="0" max={duration || 100} value={currentTime} onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = parseFloat(e.target.value); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 </div>
                 <span className="text-[10px] font-black text-slate-600 tabular-nums w-10">{formatTime(duration)}</span>
               </div>
             </div>
             
-            <div className="hidden lg:flex items-center gap-3 min-w-[150px] justify-end border-l border-white/10 pl-6">
+            <div className="hidden lg:flex items-center gap-6 min-w-[200px] justify-end border-l border-white/10 pl-6">
+              <Button 
+                onClick={() => setCurrentView(currentView === 'queue' ? 'trending' : 'queue')}
+                variant="ghost" 
+                className={`flex flex-col items-center gap-1 transition-colors ${currentView === 'queue' ? 'text-primary' : 'text-slate-500 hover:text-white'}`}
+              >
+                <ListMusic className="w-5 h-5" />
+                <span className="text-[8px] font-black uppercase tracking-[0.2em]">Queue</span>
+              </Button>
               <div className="text-right">
-                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Mode</p>
+                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Source</p>
                  <div className="flex items-center gap-1.5 justify-end">
-                    <TrendingUp className="w-3 h-3 text-primary" />
-                    <span className="text-xs font-bold text-white uppercase tracking-tighter">Trending</span>
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    <span className="text-xs font-bold text-white uppercase tracking-tighter">JioSaavn</span>
                  </div>
               </div>
             </div>
@@ -434,6 +722,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         onClose={() => setIsFloatingCardOpen(false)}
         onPlay={(url) => playPreview(url, selectedSong!)}
         onToggleFavorite={toggleFavorite}
+        onAddToQueue={addToQueue}
+        onAddToPlayNext={addToPlayNext}
+        onAddToPlaylist={addToPlaylist}
+        playlists={playlists}
       />
     </div>
   )

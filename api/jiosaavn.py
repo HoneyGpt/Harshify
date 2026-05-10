@@ -95,3 +95,13 @@ def get_lyrics(id):
     lyrics_json = requests.get(url).text
     lyrics_text = json.loads(lyrics_json)
     return lyrics_text['lyrics']
+
+
+def get_home_data(languages):
+    try:
+        url = f"{endpoints.home_data_base_url}&language={languages}"
+        response = requests.get(url).text.encode().decode('unicode-escape')
+        return json.loads(response)
+    except Exception as e:
+        print(f"Error fetching home data: {e}")
+        return None

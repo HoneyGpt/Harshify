@@ -63,6 +63,45 @@ def get_stream():
 def health():
     return jsonify({"status": "ok", "server": "serverless-python"})
 
+@app.route('/api/modules')
+def get_modules():
+    languages = request.args.get('language', 'english,hindi')
+    data = jiosaavn.get_home_data(languages)
+    if not data:
+        return jsonify({"trending": [], "charts": []})
+    
+    trending = []
+    if 'new_trending' in data:
+        trending = [map_jiosaavn_to_song(t) for t in data['new_trending']]
+    
+    charts = []
+    if 'charts' in data:
+        for chart in data['charts']:
+            charts.append({
+                "id": chart.get('id'),
+                "title": chart.get('title'),
+                "image": chart.get('image'),
+                "subtitle": chart.get('subtitle'),
+                "type": chart.get('type'),
+                "perma_url": chart.get('perma_url')
+            })
+            
+    return jsonify({
+        "trending": trending,
+        "charts": charts
+    })
+
+@app.route('/api/playlist')
+def get_playlist_songs():
+    list_id = request.args.get('id')
+    if not list_id:
+        return jsonify({"songs": []})
+    data = jiosaavn.get_playlist(list_id, False)
+    if data and 'songs' in data:
+        songs = [map_jiosaavn_to_song(t) for t in data['songs']]
+        return jsonify({"songs": songs, "name": data.get('listname')})
+    return jsonify({"songs": []})
+
 # For local development
 if __name__ == '__main__':
     app.run(port=3001)
