@@ -10,7 +10,7 @@
     "server": "nodemon --exec \"npx tsx server.ts\"",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
-    "postinstall": "pip install -U yt-dlp ytmusicapi"
+    "postinstall": "pip3 install -U yt-dlp ytmusicapi"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

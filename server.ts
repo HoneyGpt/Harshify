@@ -45,7 +45,10 @@ interface Song {
 // --- Helper for Python Bridge ---
 const runPythonBridge = (command: string, args: string[]): Promise<any> => {
   return new Promise((resolve, reject) => {
-    const python = spawn('python', ['yt_bridge.py', command, ...args]);
+    // Try python3 first (standard on Linux/Render), fallback to python
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    const python = spawn(pythonCmd, ['yt_bridge.py', command, ...args]);
+    
     let data = '';
     let error = '';
 
@@ -59,7 +62,7 @@ const runPythonBridge = (command: string, args: string[]): Promise<any> => {
 
     python.on('close', (code) => {
       if (code !== 0) {
-        console.error(`Python script failed: ${error}`);
+        console.error(`Python script failed (${pythonCmd}): ${error}`);
         reject(new Error(`Python script failed with code ${code}`));
         return;
       }
@@ -76,58 +79,19 @@ const runPythonBridge = (command: string, args: string[]): Promise<any> => {
   });
 };
 
-// --- Ported API Logic ---
-
-const fetchFromiTunes = async (query: string): Promise<Song[]> => {
-  try {
-    const response = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=5&media=music`
-    );
-    if (response.ok) {
-      const data = await response.json();
-      return data.results.map((track: any) => ({
-        id: `itunes_${track.trackId}`,
-        title: track.trackName,
-        artist: track.artistName,
-        album: track.collectionName || 'Unknown Album',
-        duration: track.trackTimeMillis ? 
-          `${Math.floor(track.trackTimeMillis / 60000)}:${Math.floor((track.trackTimeMillis % 60000) / 1000).toString().padStart(2, '0')}` : 
-          '0:00',
-        coverUrl: track.artworkUrl100?.replace('100x100', '600x600') || `https://via.placeholder.com/600`,
-        preview: track.previewUrl,
-        isFavorite: false,
-        source: 'itunes'
-      }));
-    }
-    return [];
-  } catch (error) {
-    return [];
-  }
-};
-
 // --- Routes ---
 
 app.get('/api/songs', async (req, res) => {
-  const query = (req.query.search as string) || "top charts 2024 global"; // Default to real trending hits
-  let songs: Song[] = [];
-
+  const query = (req.query.search as string) || "trending hits 2024 global";
+  
   try {
-    const [itunes, youtube] = await Promise.all([
-      fetchFromiTunes(query),
-      runPythonBridge('search', [query])
-    ]);
-    
-    // Filter out iTunes duplicates if YouTube results exist, prioritizing full-length YouTube tracks
-    const ytIds = new Set(youtube.map((s: Song) => s.title.toLowerCase()));
-    const filteredItunes = itunes.filter((s: Song) => !ytIds.has(s.title.toLowerCase()));
-    
-    songs = [...youtube, ...filteredItunes].slice(0, 50);
+    // We are now ONLY using YouTube to guarantee full-length, unlimited songs
+    const youtube = await runPythonBridge('search', [query]);
+    res.json({ songs: youtube.slice(0, 50) });
   } catch (e) {
     console.error("Search error:", e);
-    songs = await fetchFromiTunes(query);
+    res.status(500).json({ error: "Failed to fetch songs", details: e instanceof Error ? e.message : String(e) });
   }
-
-  res.json({ songs });
 });
 
 // Endpoint to stream audio directly through the server (fixes IP mismatch & CORS)
@@ -154,7 +118,7 @@ app.get('/api/stream', async (req, res) => {
     response.data.pipe(res);
   } catch (e) {
     console.error("Streaming error:", e);
-    res.status(500).json({ error: "Failed to stream audio" });
+    res.status(500).json({ error: "Failed to stream audio", details: e instanceof Error ? e.message : String(e) });
   }
 });
 
