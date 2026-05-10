@@ -1,0 +1,17 @@
+{
+  "name": "MelodyMentor",
+  "short_name": "Melody",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#4f46e5",
+  "description": "Unlimited, ad-free music streaming powered by Mentozy.",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
