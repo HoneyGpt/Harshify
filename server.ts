@@ -35,73 +35,33 @@ interface Song {
   source: string;
 }
 
-// --- Helper for Python Bridge ---
-const runPythonBridge = (command: string, args: string[]): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const python = spawn('python', ['yt_bridge.py', command, ...args]);
-    let data = '';
-    let error = '';
-
-    python.stdout.on('data', (chunk) => {
-      data += chunk.toString();
-    });
-
-    python.stderr.on('data', (chunk) => {
-      error += chunk.toString();
-    });
-
-    python.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Python script failed with code ${code}: ${error}`));
-        return;
-      }
-      try {
-        // Some commands return JSON, others plain strings
-        if (data.trim().startsWith('[') || data.trim().startsWith('{')) {
-          resolve(jsonSafeParse(data));
-        } else {
-          resolve(data.trim());
-        }
-      } catch (e) {
-        resolve(data.trim());
-      }
-    });
-  });
-};
-
-const jsonSafeParse = (str: string) => {
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return str;
-  }
-};
+// Obsolete Python bridge removed
 
 // --- Ported API Logic ---
 
-const fetchFromiTunes = async (query: string): Promise<Song[]> => {
+const fetchFromJioSaavn = async (query: string): Promise<Song[]> => {
   try {
-    const response = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=5&media=music`
-    );
+    const response = await fetch(`http://127.0.0.1:5100/result/?query=${encodeURIComponent(query)}`);
     if (response.ok) {
       const data = await response.json();
-      return data.results.map((track: any) => ({
-        id: `itunes_${track.trackId}`,
-        title: track.trackName,
-        artist: track.artistName,
-        album: track.collectionName || 'Unknown Album',
-        duration: track.trackTimeMillis ? 
-          `${Math.floor(track.trackTimeMillis / 60000)}:${Math.floor((track.trackTimeMillis % 60000) / 1000).toString().padStart(2, '0')}` : 
+      if (!Array.isArray(data)) return [];
+      return data.map((track: any) => ({
+        id: `jiosaavn_${track.id}`,
+        title: track.song || track.title || 'Unknown',
+        artist: track.singers || track.primary_artists || 'Unknown Artist',
+        album: track.album || 'Unknown Album',
+        duration: track.duration ? 
+          `${Math.floor(parseInt(track.duration) / 60)}:${Math.floor(parseInt(track.duration) % 60).toString().padStart(2, '0')}` : 
           '0:00',
-        coverUrl: track.artworkUrl100?.replace('100x100', '600x600') || `https://via.placeholder.com/600`,
-        preview: track.previewUrl,
+        coverUrl: track.image || track.image_url || `https://via.placeholder.com/600`,
+        preview: track.media_url || track.url,
         isFavorite: false,
-        source: 'itunes'
+        source: 'jiosaavn'
       }));
     }
     return [];
   } catch (error) {
+    console.error("JioSaavn API error:", error);
     return [];
   }
 };
@@ -119,16 +79,10 @@ app.get('/api/songs', async (req, res) => {
 
   if (query && query.trim() !== '') {
     try {
-      const [itunes, youtube] = await Promise.all([
-        fetchFromiTunes(query),
-        runPythonBridge('search', [query])
-      ]);
-      
-      // Combine results, prioritizing YouTube for "full songs"
-      songs = [...youtube, ...itunes].slice(0, 30);
+      songs = await fetchFromJioSaavn(query);
+      songs = songs.slice(0, 30);
     } catch (e) {
       console.error("Search error:", e);
-      songs = await fetchFromiTunes(query);
     }
   } else {
     songs = getPopularSongs();
@@ -139,16 +93,13 @@ app.get('/api/songs', async (req, res) => {
 
 // Endpoint to get full audio stream URL
 app.get('/api/stream', async (req, res) => {
+  // Since JioSaavn provides the direct media_url in the search results,
+  // we can just echo it back or the frontend can skip this endpoint.
+  // We'll keep it for backwards compatibility if needed, but it's largely obsolete.
   const videoId = req.query.id as string;
   if (!videoId) return res.status(400).json({ error: "Missing video id" });
 
-  try {
-    const streamUrl = await runPythonBridge('stream', [videoId]);
-    res.json({ url: streamUrl });
-  } catch (e) {
-    console.error("Streaming error:", e);
-    res.status(500).json({ error: "Failed to get stream URL" });
-  }
+  res.json({ url: videoId }); 
 });
 
 app.get('/api/health', (req, res) => {
@@ -161,5 +112,5 @@ setupSocket(io);
 // Start the server
 server.listen(currentPort, hostname, () => {
   console.log(`> API Server ready on http://${hostname}:${currentPort}`);
-  console.log(`> YouTube Music Bridge active via Python`);
+  console.log(`> JioSaavn API Bridge active on port 5100`);
 });

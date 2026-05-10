@@ -61,9 +61,6 @@ export default function SongFloatingCard({ song, isOpen, onClose, onPlay, onTogg
               <div className="relative group w-full max-w-[300px] aspect-square rounded-[3rem] overflow-hidden shadow-2xl mb-10">
                 <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{song.source}</p>
-                </div>
               </div>
 
               <div className="flex gap-4 w-full">

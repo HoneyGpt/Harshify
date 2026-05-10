@@ -91,7 +91,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   const loadTrending = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/songs?search=top global trending 2024 hits`)
+      const res = await fetch(`/api/songs?search=${encodeURIComponent('trending english')}`)
       const data = await res.json()
       const tracksWithFavorites = data.songs.map((track: Song) => ({
         ...track,
@@ -152,25 +152,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     if (audioRef.current && trackToPlay) {
       let finalUrl = previewUrl;
 
-      if (trackToPlay.source === 'youtube') {
-        setResolvingStream(true);
-        try {
-          console.log(`Resolving stream for: ${trackToPlay.title} (${previewUrl})`);
-          const res = await fetch(`/api/stream?id=${previewUrl}`);
-          const data = await res.json();
-          if (data.url) {
-            finalUrl = data.url;
-            console.log("Stream resolved successfully");
-          } else {
-            throw new Error("Empty URL returned from server");
-          }
-        } catch (e) {
-          console.error("Failed to resolve stream:", e);
-          setResolvingStream(false);
-          return;
-        }
-        setResolvingStream(false);
-      }
+      // With JioSaavn, previewUrl is the direct MP3 link, so we skip stream resolution
 
       audioRef.current.pause()
       audioRef.current.src = finalUrl
