@@ -176,6 +176,14 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     finally { setSearchingInPlaylist(false) }
   }
 
+  const createPlaylist = () => {
+    if (!newPlaylistName.trim()) return
+    const newPlaylist = { id: Date.now().toString(), name: newPlaylistName, songs: [] }
+    setPlaylists([...playlists, newPlaylist])
+    setNewPlaylistName('')
+    setShowCreateModal(false)
+  }
+
   // --- UI Components ---
   const NavItem = ({ icon: Icon, label, active, onClick }: any) => (
     <button 
@@ -582,7 +590,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               />
               <div className="flex gap-4">
                 <Button onClick={() => setShowCreateModal(false)} variant="ghost" className="flex-1 rounded-2xl h-14 text-slate-500 font-bold uppercase tracking-widest text-[10px]">Cancel</Button>
-                <Button onClick={() => { if (!newPlaylistName.trim()) return; setPlaylists([...playlists, { id: Date.now().toString(), name: newPlaylistName, songs: [] }]); setNewPlaylistName(''); setShowCreateModal(false); }} className="flex-1 bg-primary text-white rounded-2xl h-14 font-black uppercase tracking-widest text-[10px]">Create</Button>
+                <Button onClick={createPlaylist} className="flex-1 bg-primary text-white rounded-2xl h-14 font-black uppercase tracking-widest text-[10px]">Create</Button>
               </div>
             </motion.div>
           </div>
