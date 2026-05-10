@@ -75,6 +75,35 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     localStorage.setItem('melody-mentor-playlists', JSON.stringify(playlists))
   }, [playlists])
 
+  useEffect(() => {
+    if ('mediaSession' in navigator && current) {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: current.title,
+        artist: current.artist,
+        album: current.album,
+        artwork: [
+          { src: current.coverUrl, sizes: '512x512', type: 'image/png' }
+        ]
+      })
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        audioRef.current?.play()
+        setIsPlaying(true)
+      })
+      navigator.mediaSession.setActionHandler('pause', () => {
+        audioRef.current?.pause()
+        setIsPlaying(false)
+      })
+      navigator.mediaSession.setActionHandler('previoustrack', playNext) // Using playNext for now to ensure skip works
+      navigator.mediaSession.setActionHandler('nexttrack', playNext)
+      
+      // Update playPrevious if it exists
+      try {
+        navigator.mediaSession.setActionHandler('previoustrack', playPrevious)
+      } catch (e) {}
+    }
+  }, [current])
+
   // --- Music Logic ---
   const loadTrending = async () => {
     setLoading(true)
