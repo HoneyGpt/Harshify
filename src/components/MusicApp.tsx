@@ -77,7 +77,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
 
   useEffect(() => {
     if ('mediaSession' in navigator && current) {
-      navigator.mediaSession.metadata = new window.MediaMetadata({
+      navigator.mediaSession.metadata = new MediaMetadata({
         title: current.title,
         artist: current.artist,
         album: current.album,
@@ -86,23 +86,23 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         ]
       })
 
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+
       navigator.mediaSession.setActionHandler('play', () => {
         audioRef.current?.play()
-        setIsPlaying(true)
       })
       navigator.mediaSession.setActionHandler('pause', () => {
         audioRef.current?.pause()
-        setIsPlaying(false)
       })
-      navigator.mediaSession.setActionHandler('previoustrack', playNext) // Using playNext for now to ensure skip works
-      navigator.mediaSession.setActionHandler('nexttrack', playNext)
-      
-      // Update playPrevious if it exists
-      try {
-        navigator.mediaSession.setActionHandler('previoustrack', playPrevious)
-      } catch (e) {}
+      navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious())
+      navigator.mediaSession.setActionHandler('nexttrack', () => playNext())
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (audioRef.current && details.seekTime) {
+          audioRef.current.currentTime = details.seekTime
+        }
+      })
     }
-  }, [current])
+  }, [current, isPlaying])
 
   // --- Music Logic ---
   const loadTrending = async () => {
