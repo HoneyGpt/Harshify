@@ -432,10 +432,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                   </div>
                 </div>
 
-                {/* Mobile Layout (Clean & Minimal) */}
-                <div className="flex md:hidden flex-col w-full h-full pt-12 pb-10 bg-black">
-                  {/* Top Bar */}
-                  <div className="flex items-center justify-between px-2 mb-10 shrink-0">
+                {/* Mobile Layout (Structural Refactor to Fix Overlap) */}
+                <div className="flex md:hidden flex-col w-full h-full bg-black overflow-y-auto no-scrollbar pt-12 pb-10">
+                  {/* Top Bar (Shrink-0) */}
+                  <div className="flex items-center justify-between px-2 mb-8 shrink-0">
                     <button onClick={() => setIsFullScreenPlayerOpen(false)} className="text-white/70 p-2"><ChevronDown className="w-7 h-7" /></button>
                     <div className="flex items-center gap-2 bg-[#181818] px-4 py-2 rounded-full border border-white/5">
                       <Headphones className="w-4 h-4 text-white" />
@@ -444,55 +444,62 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                     <button className="text-white/70 p-2"><MoreVertical className="w-6 h-6" /></button>
                   </div>
 
-                  {/* Centered Album Art */}
-                  <div className="flex-1 flex items-start justify-center min-h-0 mb-8 mt-0 px-4">
-                    <div className="w-full aspect-square max-w-[320px] rounded-xl overflow-hidden shadow-md">
-                      <img src={current?.coverUrl || DEFAULT_COVER} className="w-full h-full object-cover" alt="" />
-                    </div>
-                  </div>
-
-                  {/* Track Info & Add to Playlist */}
-                  <div className="px-6 mb-12 shrink-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-2xl font-bold text-white truncate mb-1">{current?.title}</h2>
-                        <p className="text-lg font-medium text-[#a7a7a7] truncate">{current?.artist}</p>
-                      </div>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setShowPlaylistSelectorModal(true); }}
-                        className="flex flex-col items-center gap-1.5 text-[#a7a7a7] hover:text-white transition-colors duration-200 shrink-0"
-                      >
-                        <Plus className="w-8 h-8" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Playlist</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Progress & Playback */}
-                  <div className="px-4 shrink-0">
-                    <div className="mb-8">
-                      <div className="w-full h-1 bg-[#181818] rounded-full relative mb-2">
-                        <div className="absolute h-full bg-white" style={{ width: `${(currentTime/duration)*100}%` }} />
-                        <input 
-                          type="range" min="0" max={duration} step="1" value={currentTime} 
-                          onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }} 
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                  {/* Flexible Content Wrapper */}
+                  <div className="flex flex-col flex-1 min-h-0">
+                    {/* Centered Album Art (Flexible & Scaling) */}
+                    <div className="flex-1 flex items-center justify-center min-h-0 px-6 mb-8">
+                      <div className="relative w-full max-w-[320px] aspect-square rounded-xl overflow-hidden shadow-2xl bg-[#121212]">
+                        <img 
+                          src={current?.coverUrl || DEFAULT_COVER} 
+                          className="w-full h-full object-cover" 
+                          alt="" 
                         />
                       </div>
-                      <div className="flex justify-between text-[11px] font-medium text-[#a7a7a7] tabular-nums">
-                        <span>{Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')}</span>
-                        <span>{Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}</span>
+                    </div>
+
+                    {/* Track Info & Add to Playlist (Shrink-0) */}
+                    <div className="px-6 mb-8 shrink-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-2xl font-bold text-white truncate mb-1">{current?.title}</h2>
+                          <p className="text-lg font-medium text-[#a7a7a7] truncate">{current?.artist}</p>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setShowPlaylistSelectorModal(true); }}
+                          className="flex flex-col items-center gap-1.5 text-[#a7a7a7] hover:text-white transition-colors duration-200 shrink-0"
+                        >
+                          <Plus className="w-8 h-8" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Playlist</span>
+                        </button>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between px-2">
-                      <button onClick={(e) => { e.stopPropagation(); setShuffle(!shuffle); }} className={`transition-colors duration-200 ${shuffle ? 'text-primary' : 'text-[#a7a7a7] hover:text-white'}`}><Shuffle className="w-6 h-6" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); playPrevious(); }} className="text-white p-2 active:scale-95 transition-transform"><SkipBack className="w-10 h-10 fill-current" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
-                        {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="text-white p-2 active:scale-95 transition-transform"><SkipForward className="w-10 h-10 fill-current" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); setRepeat(repeat === 'off' ? 'all' : 'off'); }} className={`transition-colors duration-200 ${repeat !== 'off' ? 'text-primary' : 'text-[#a7a7a7] hover:text-white'}`}><Repeat className="w-6 h-6" /></button>
+                    {/* Progress & Playback Controls (Shrink-0) */}
+                    <div className="px-4 mb-4 shrink-0">
+                      <div className="mb-8">
+                        <div className="w-full h-1 bg-[#181818] rounded-full relative mb-4">
+                          <div className="absolute h-full bg-white rounded-full" style={{ width: `${(currentTime/duration)*100}%` }} />
+                          <input 
+                            type="range" min="0" max={duration} step="1" value={currentTime} 
+                            onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }} 
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                          />
+                        </div>
+                        <div className="flex justify-between text-[11px] font-bold text-[#a7a7a7] tabular-nums tracking-widest">
+                          <span>{Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')}</span>
+                          <span>{Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between px-2">
+                        <button onClick={(e) => { e.stopPropagation(); setShuffle(!shuffle); }} className={`transition-colors duration-200 ${shuffle ? 'text-primary' : 'text-[#a7a7a7] hover:text-white'}`}><Shuffle className="w-6 h-6" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); playPrevious(); }} className="text-white p-2 active:scale-95 transition-transform"><SkipBack className="w-10 h-10 fill-current" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
+                          {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="text-white p-2 active:scale-95 transition-transform"><SkipForward className="w-10 h-10 fill-current" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); setRepeat(repeat === 'off' ? 'all' : 'off'); }} className={`transition-colors duration-200 ${repeat !== 'off' ? 'text-primary' : 'text-[#a7a7a7] hover:text-white'}`}><Repeat className="w-6 h-6" /></button>
+                      </div>
                     </div>
                   </div>
                 </div>
