@@ -362,7 +362,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               <motion.div 
                 key="full-player"
                 initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }}
-                className="absolute inset-0 z-[110] bg-black flex flex-col md:flex-row p-4 md:p-10 gap-6 md:gap-10 overflow-y-auto md:overflow-hidden"
+                className="absolute top-0 left-0 right-0 bottom-0 md:bottom-24 z-[110] bg-black flex flex-col md:flex-row p-4 md:p-10 gap-6 md:gap-10 overflow-y-auto md:overflow-hidden"
               >
                 {/* Desktop Layout (Side-by-side) */}
                 <div className="hidden md:flex flex-1 w-full h-full gap-10">
@@ -680,10 +680,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
 
     {/* Persistent Player Bar (YouTube Music Style) */}
     <AnimatePresence>
-      {current && !isFullScreenPlayerOpen && (
+      {current && (
         <motion.div 
           initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
-          className="fixed bottom-20 md:bottom-0 left-0 right-0 h-20 md:h-24 bg-[#0a0a0a] border-t border-white/5 z-[100] px-4 md:px-10 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+          className={`fixed bottom-20 md:bottom-0 left-0 right-0 h-20 md:h-24 bg-[#0a0a0a] border-t border-white/5 z-[120] px-4 md:px-10 items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.5)] ${isFullScreenPlayerOpen ? 'hidden md:flex' : 'flex'}`}
         >
           {/* Left: Controls */}
           <div className="flex items-center gap-4 md:gap-8 w-1/4">
