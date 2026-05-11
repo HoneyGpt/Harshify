@@ -447,14 +447,12 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                   {/* Flexible Content Wrapper */}
                   <div className="flex flex-col flex-1 min-h-0">
                     {/* Centered Album Art (Flexible & Scaling) */}
-                    <div className="flex-1 flex items-center justify-center min-h-0 px-6 mb-8">
-                      <div className="relative w-full max-w-[320px] aspect-square rounded-xl overflow-hidden shadow-2xl bg-[#121212]">
-                        <img 
-                          src={current?.coverUrl || DEFAULT_COVER} 
-                          className="w-full h-full object-cover" 
-                          alt="" 
-                        />
-                      </div>
+                    <div className="flex-1 flex items-center justify-center min-h-0 px-6 mb-6">
+                      <img 
+                        src={current?.coverUrl || DEFAULT_COVER} 
+                        className="h-full max-h-[320px] max-w-full aspect-square object-cover rounded-2xl shadow-2xl bg-[#121212]" 
+                        alt="Album Art" 
+                      />
                     </div>
 
                     {/* Track Info & Add to Playlist (Shrink-0) */}
