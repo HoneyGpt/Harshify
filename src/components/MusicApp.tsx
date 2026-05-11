@@ -680,71 +680,71 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
           )}
         </AnimatePresence>
       </div>
+    </main>
 
-      {/* Persistent Player Bar (YouTube Music Style) */}
-      <AnimatePresence>
-        {current && !isFullScreenPlayerOpen && (
-          <motion.div 
-            initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
-            className="fixed bottom-20 md:bottom-0 left-0 right-0 h-20 md:h-24 bg-[#0a0a0a] border-t border-white/5 z-[100] px-4 md:px-10 flex items-center justify-between"
-          >
-            {/* Left: Controls */}
-            <div className="flex items-center gap-4 md:gap-8 w-1/4">
-              <button onClick={(e) => { e.stopPropagation(); playPrevious(); }} className="text-white hover:text-primary transition-colors duration-200 p-3 -m-3 group">
-                <SkipBack className="w-6 h-6 md:w-8 md:h-8 fill-current group-active:scale-90 transition-transform" />
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-10 h-10 md:w-14 md:h-14 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-colors duration-200 shadow-xl">
-                {isPlaying ? <Pause className="w-5 h-5 md:w-6 md:h-6 fill-current" /> : <Play className="w-5 h-5 md:w-6 md:h-6 fill-current ml-0.5" />}
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="text-white hover:text-primary transition-colors duration-200 p-3 -m-3 group">
-                <SkipForward className="w-6 h-6 md:w-8 md:h-8 fill-current group-active:scale-90 transition-transform" />
-              </button>
-              <span className="hidden md:block text-[11px] font-bold text-white/40 tabular-nums">
-                {Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')} / {Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}
-              </span>
+    {/* Persistent Player Bar (YouTube Music Style) */}
+    <AnimatePresence>
+      {current && !isFullScreenPlayerOpen && (
+        <motion.div 
+          initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
+          className="fixed bottom-20 md:bottom-0 left-0 right-0 h-20 md:h-24 bg-[#0a0a0a] border-t border-white/5 z-[100] px-4 md:px-10 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+        >
+          {/* Left: Controls */}
+          <div className="flex items-center gap-4 md:gap-8 w-1/4">
+            <button onClick={(e) => { e.stopPropagation(); playPrevious(); }} className="text-white hover:text-primary transition-colors duration-200 p-3 -m-3 group">
+              <SkipBack className="w-6 h-6 md:w-8 md:h-8 fill-current group-active:scale-90 transition-transform" />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} className="w-10 h-10 md:w-14 md:h-14 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-colors duration-200 shadow-xl">
+              {isPlaying ? <Pause className="w-5 h-5 md:w-6 md:h-6 fill-current" /> : <Play className="w-5 h-5 md:w-6 md:h-6 fill-current ml-0.5" />}
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="text-white hover:text-primary transition-colors duration-200 p-3 -m-3 group">
+              <SkipForward className="w-6 h-6 md:w-8 md:h-8 fill-current group-active:scale-90 transition-transform" />
+            </button>
+            <span className="hidden md:block text-[11px] font-bold text-white/40 tabular-nums">
+              {Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')} / {Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}
+            </span>
+          </div>
+
+          {/* Center: Track Details */}
+          <div className="flex items-center justify-center gap-4 flex-1 min-w-0 px-10 cursor-pointer" onClick={() => setIsFullScreenPlayerOpen(true)}>
+            <img src={current.coverUrl || DEFAULT_COVER} className="w-10 h-10 md:w-12 md:h-12 rounded-md object-cover shadow-xl" alt="" />
+            <div className="text-center min-w-0">
+              <h4 className="text-sm font-semibold text-white truncate mb-0.5">{current.title}</h4>
+              <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-[0.1em]">{current.artist}</p>
             </div>
+            <div className="flex items-center gap-2">
+              <button onClick={(e) => e.stopPropagation()} className="text-white/40 hover:text-white p-2"><ThumbsDown className="w-4 h-4" /></button>
+              <button onClick={(e) => e.stopPropagation()} className="text-white/40 hover:text-white p-2"><ThumbsUp className="w-4 h-4" /></button>
+            </div>
+          </div>
 
-            {/* Center: Track Details */}
-            <div className="flex items-center justify-center gap-4 flex-1 min-w-0 px-10 cursor-pointer" onClick={() => setIsFullScreenPlayerOpen(true)}>
-              <img src={current.coverUrl || DEFAULT_COVER} className="w-10 h-10 md:w-12 md:h-12 rounded-md object-cover shadow-xl" alt="" />
-              <div className="text-center min-w-0">
-                <h4 className="text-sm font-semibold text-white truncate mb-0.5">{current.title}</h4>
-                <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-[0.1em]">{current.artist}</p>
+          {/* Right: Sound & Tools */}
+          <div className="flex items-center justify-end gap-6 w-1/4">
+            <div className="hidden lg:flex items-center gap-4 group/vol">
+              <Volume2 className="w-5 h-5 text-white/40 group-hover/vol:text-white transition-colors" />
+              <div className="w-24 h-1 bg-[#242424] rounded-full relative overflow-hidden">
+                <div className="absolute h-full bg-white rounded-full" style={{ width: `${volume * 100}%` }} />
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={(e) => e.stopPropagation()} className="text-white/40 hover:text-white p-2"><ThumbsDown className="w-4 h-4" /></button>
-                <button onClick={(e) => e.stopPropagation()} className="text-white/40 hover:text-white p-2"><ThumbsUp className="w-4 h-4" /></button>
-              </div>
             </div>
+            <button onClick={(e) => { e.stopPropagation(); setRepeat(repeat === 'off' ? 'all' : 'off'); }} className={`transition-colors ${repeat !== 'off' ? 'text-primary' : 'text-white/40 hover:text-white'}`}><Repeat className="w-5 h-5" /></button>
+            <button onClick={(e) => { e.stopPropagation(); setShuffle(!shuffle); }} className={`transition-colors ${shuffle ? 'text-primary' : 'text-white/40 hover:text-white'}`}><Shuffle className="w-5 h-5" /></button>
+            <button onClick={(e) => { e.stopPropagation(); setIsFullScreenPlayerOpen(!isFullScreenPlayerOpen); }} className="text-white/40 hover:text-white transition-colors"><ChevronDown className={`w-6 h-6 transition-transform ${isFullScreenPlayerOpen ? 'rotate-180' : ''}`} /></button>
+          </div>
 
-            {/* Right: Sound & Tools */}
-            <div className="flex items-center justify-end gap-6 w-1/4">
-              <div className="hidden lg:flex items-center gap-4 group/vol">
-                <Volume2 className="w-5 h-5 text-white/40 group-hover/vol:text-white transition-colors" />
-                <div className="w-24 h-1 bg-[#242424] rounded-full relative overflow-hidden">
-                  <div className="absolute h-full bg-white rounded-full" style={{ width: `${volume * 100}%` }} />
-                  <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                </div>
-              </div>
-              <button onClick={(e) => { e.stopPropagation(); setRepeat(repeat === 'off' ? 'all' : 'off'); }} className={`transition-colors ${repeat !== 'off' ? 'text-primary' : 'text-white/40 hover:text-white'}`}><Repeat className="w-5 h-5" /></button>
-              <button onClick={(e) => { e.stopPropagation(); setShuffle(!shuffle); }} className={`transition-colors ${shuffle ? 'text-primary' : 'text-white/40 hover:text-white'}`}><Shuffle className="w-5 h-5" /></button>
-              <button onClick={(e) => { e.stopPropagation(); setIsFullScreenPlayerOpen(!isFullScreenPlayerOpen); }} className="text-white/40 hover:text-white transition-colors"><ChevronDown className={`w-6 h-6 transition-transform ${isFullScreenPlayerOpen ? 'rotate-180' : ''}`} /></button>
-            </div>
-
-            {/* Progress Bar (Global) */}
-            <div className="absolute top-0 left-0 right-0 h-1 md:h-[2px] bg-[#242424] overflow-hidden">
-              <div className="h-full bg-primary transition-colors duration-200" style={{ width: `${(currentTime/duration)*100}%` }} />
-              <input 
-                type="range" min="0" max={duration} step="1" value={currentTime} 
-                onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      </main>
+          {/* Progress Bar (Global) */}
+          <div className="absolute top-0 left-0 right-0 h-1 md:h-[2px] bg-[#242424] overflow-hidden">
+            <div className="h-full bg-primary transition-colors duration-200" style={{ width: `${(currentTime/duration)*100}%` }} />
+            <input 
+              type="range" min="0" max={duration} step="1" value={currentTime} 
+              onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+            />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
       {/* Mobile Bottom Navigation */}
       {!isFullScreenPlayerOpen && (
