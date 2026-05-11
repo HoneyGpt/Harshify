@@ -144,14 +144,14 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     playTrack(songs[0])
   }
 
-  const playTrack = (song: Song) => {
+  const playTrack = (song: Song, openFullScreen = true) => {
     setCurrent(song)
     setIsPlaying(true)
-    setIsFullScreenPlayerOpen(true)
+    if (openFullScreen) setIsFullScreenPlayerOpen(true)
     if (audioRef.current) {
       audioRef.current.src = song.preview
       audioRef.current.load()
-      audioRef.current.play()
+      audioRef.current.play().catch(err => console.error("Playback failed:", err))
     }
   }
 
@@ -197,17 +197,19 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   }
 
   const playNext = () => {
-    if (queue.length === 0) return
-    const index = queue.findIndex(s => s.id === current?.id)
-    const nextIndex = (index + 1) % queue.length
-    playTrack(queue[nextIndex])
+    const songList = queue.length > 0 ? queue : trendingSongs
+    if (songList.length === 0) return
+    const index = songList.findIndex(s => s.id === current?.id)
+    const nextIndex = (index + 1) % songList.length
+    playTrack(songList[nextIndex], false)
   }
 
   const playPrevious = () => {
-    if (queue.length === 0) return
-    const index = queue.findIndex(s => s.id === current?.id)
-    const prevIndex = (index - 1 + queue.length) % queue.length
-    playTrack(queue[prevIndex])
+    const songList = queue.length > 0 ? queue : trendingSongs
+    if (songList.length === 0) return
+    const index = songList.findIndex(s => s.id === current?.id)
+    const prevIndex = (index - 1 + songList.length) % songList.length
+    playTrack(songList[prevIndex], false)
   }
 
   const handlePlaylistSearch = async () => {
