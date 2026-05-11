@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Play, Heart, Music, Pause, Star, ListMusic, Home, LogOut, Loader2, TrendingUp, SkipForward, SkipBack, Plus, Shuffle, Repeat, X, Library, Mic2, Bell, User, Settings, MoreHorizontal, Zap } from 'lucide-react'
+import { Search, Play, Heart, Music, Pause, Star, ListMusic, Home, LogOut, Loader2, TrendingUp, SkipForward, SkipBack, Plus, Shuffle, Repeat, X, Library, Mic2, Bell, User, Settings, MoreHorizontal, Zap, Volume2, Volume1, VolumeX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SongFloatingCard from '@/components/SongFloatingCard'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -56,6 +56,8 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   const [playlistSearchQuery, setPlaylistSearchQuery] = useState('')
   const [playlistSearchResults, setPlaylistSearchResults] = useState<Song[]>([])
   const [searchingInPlaylist, setSearchingInPlaylist] = useState(false)
+  const [volume, setVolume] = useState(1)
+  const [isMuted, setIsMuted] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
 
   // --- Initialization ---
@@ -165,6 +167,22 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       if (isPlaying) audioRef.current.pause()
       else audioRef.current.play()
       setIsPlaying(!isPlaying)
+    }
+  }
+
+  const handleVolumeChange = (v: number) => {
+    setVolume(v)
+    if (audioRef.current) {
+      audioRef.current.volume = v
+      setIsMuted(v === 0)
+    }
+  }
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      const newMute = !isMuted
+      setIsMuted(newMute)
+      audioRef.current.volume = newMute ? 0 : volume
     }
   }
 
@@ -558,7 +576,17 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                   </div>
                 </div>
 
-                <div className="hidden lg:flex items-center gap-6 w-72 justify-end border-l border-white/5 pl-10">
+                <div className="hidden lg:flex items-center gap-6 w-80 justify-end border-l border-white/5 pl-10">
+                  {/* Sound Reducer (Volume Control) */}
+                  <div className="flex items-center gap-4 group/vol">
+                    <button onClick={toggleMute} className="text-slate-500 hover:text-white transition-colors">
+                      {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                    </button>
+                    <div className="w-24 h-1.5 bg-white/10 rounded-full relative overflow-hidden cursor-pointer group/bar">
+                      <div className="absolute h-full bg-primary rounded-full transition-all" style={{ width: `${isMuted ? 0 : volume * 100}%` }} />
+                      <input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    </div>
+                  </div>
                   <button onClick={() => setCurrentView('library')} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"><ListMusic className="w-6 h-6 text-slate-500 hover:text-white" /></button>
                   <button className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"><MoreHorizontal className="w-6 h-6 text-slate-500 hover:text-white" /></button>
                 </div>
