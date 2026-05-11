@@ -44,6 +44,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   const [currentView, setCurrentView] = useState<'home' | 'search' | 'library' | 'favorites' | 'playlist'>('home')
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
   const [isFloatingCardOpen, setIsFloatingCardOpen] = useState(false)
+  const [isFullScreenPlayerOpen, setIsFullScreenPlayerOpen] = useState(false)
   const [selectedSong, setSelectedSong] = useState<Song | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -538,6 +539,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
           <motion.div 
             initial={{ y: 100 }} animate={{ y: 0 }}
             className="fixed bottom-24 md:bottom-8 left-4 right-4 md:left-[calc(18rem+2rem)] md:right-10 z-50 bg-slate-900/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] md:rounded-[3rem] p-3 md:p-6 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)]"
+            onClick={() => { if (window.innerWidth < 768) setIsFullScreenPlayerOpen(true) }}
           >
             <div className="flex flex-col gap-2 md:gap-4">
               <div className="flex items-center gap-4 lg:gap-12">
@@ -694,6 +696,98 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+      {/* Full Screen Mobile Player */}
+      <AnimatePresence>
+        {isFullScreenPlayerOpen && current && (
+          <motion.div 
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[110] bg-slate-950 flex flex-col md:hidden"
+          >
+            {/* Dynamic Background Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/40 to-slate-950" />
+            
+            {/* Header */}
+            <div className="relative z-10 flex items-center justify-between p-6">
+              <button onClick={() => setIsFullScreenPlayerOpen(false)}><X className="w-8 h-8 text-white/70" /></button>
+              <div className="text-center">
+                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Playing From</p>
+                <p className="text-xs font-black text-white uppercase tracking-wider">{currentView.toUpperCase()}</p>
+              </div>
+              <button><MoreHorizontal className="w-8 h-8 text-white/70" /></button>
+            </div>
+
+            {/* Album Art */}
+            <div className="relative z-10 flex-1 flex items-center justify-center p-8">
+              <motion.img 
+                layoutId={`player-art-${current.id}`}
+                src={current.coverUrl || DEFAULT_COVER} 
+                className="w-full aspect-square rounded-[2rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)] object-cover" 
+                alt="" 
+              />
+            </div>
+
+            {/* Song Info */}
+            <div className="relative z-10 px-8 mb-8">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="text-3xl font-black text-white tracking-tighter leading-tight mb-1">{current.title}</h2>
+                  <p className="text-lg font-bold text-white/60 truncate">{current.artist}</p>
+                </div>
+                <button className="w-12 h-12 rounded-full border-2 border-white/10 flex items-center justify-center text-white/70"><Plus className="w-6 h-6" /></button>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="relative z-10 px-8 mb-10">
+              <div className="h-1.5 bg-white/10 rounded-full relative mb-4">
+                <div className="absolute h-full bg-white rounded-full" style={{ width: `${(currentTime/duration)*100}%` }} />
+                <input type="range" min="0" max={duration} value={currentTime} onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }} className="absolute inset-0 w-full h-full opacity-0" />
+              </div>
+              <div className="flex justify-between text-[10px] font-black text-white/40 tabular-nums uppercase tracking-widest">
+                <span>{Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')}</span>
+                <span>{Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}</span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="relative z-10 px-8 flex items-center justify-between mb-12">
+              <button onClick={() => setShuffle(!shuffle)} className={`transition-colors ${shuffle ? 'text-primary' : 'text-white/40'}`}><Shuffle className="w-6 h-6" /></button>
+              <div className="flex items-center gap-10">
+                <button onClick={playPrevious} className="text-white"><SkipBack className="w-10 h-10 fill-current" /></button>
+                <button onClick={togglePlayPause} className="w-24 h-24 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
+                  {isPlaying ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-1" />}
+                </button>
+                <button onClick={playNext} className="text-white"><SkipForward className="w-10 h-10 fill-current" /></button>
+              </div>
+              <button className="text-white/40"><Mic2 className="w-6 h-6" /></button>
+            </div>
+
+            {/* Bottom Info */}
+            <div className="relative z-10 px-8 pb-10 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[#4f46e5]">
+                <Zap className="w-4 h-4 fill-current" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Mentozy Soundcore</span>
+              </div>
+              <div className="flex items-center gap-6">
+                <button className="text-white/40"><LogOut className="w-5 h-5 -rotate-90" /></button>
+                <button className="text-white/40"><ListMusic className="w-5 h-5" /></button>
+              </div>
+            </div>
+
+            {/* Lyrics Preview */}
+            <div className="relative z-10 mt-auto bg-white/5 backdrop-blur-xl rounded-t-[3rem] p-8 pb-12 border-t border-white/10">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="text-sm font-black text-white uppercase tracking-[0.2em]">Lyrics Preview</h4>
+                <div className="px-3 py-1 bg-white/10 rounded-full text-[8px] font-black text-white/60 uppercase tracking-widest">Beta</div>
+              </div>
+              <p className="text-xl font-black text-white/40 leading-relaxed">
+                Enjoy the high-fidelity sound of <span className="text-white">MelodyMentor</span>. Lyrics sync coming in next update...
+              </p>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
