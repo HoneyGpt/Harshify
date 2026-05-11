@@ -527,7 +527,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         </div>
 
         {/* Player Bar (Floating Island) */}
-        {current && (
+        {current && !isFullScreenPlayerOpen && (
           <motion.div 
             initial={{ y: 100 }} animate={{ y: 0 }}
             className="fixed bottom-24 md:bottom-8 left-4 right-4 md:left-[calc(18rem+2rem)] md:right-10 z-50 bg-slate-900/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] md:rounded-[3rem] p-3 md:p-6 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)]"
@@ -600,24 +600,26 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 h-24 bg-slate-900/80 backdrop-blur-3xl border-t border-white/5 flex md:hidden items-center justify-around z-[55] px-6 pb-6">
-        <button onClick={() => setCurrentView('home')} className={`flex flex-col items-center gap-1.5 ${currentView === 'home' ? 'text-primary' : 'text-slate-500'}`}>
-          <Home className={`w-7 h-7 ${currentView === 'home' ? 'fill-current' : ''}`} />
-          <span className="text-[11px] font-black uppercase tracking-widest">Home</span>
-        </button>
-        <button onClick={() => setCurrentView('search')} className={`flex flex-col items-center gap-1.5 ${currentView === 'search' ? 'text-primary' : 'text-slate-500'}`}>
-          <Search className="w-7 h-7" />
-          <span className="text-[11px] font-black uppercase tracking-widest">Search</span>
-        </button>
-        <button onClick={() => setCurrentView('library')} className={`flex flex-col items-center gap-1.5 ${currentView === 'library' || currentView === 'playlist' ? 'text-primary' : 'text-slate-500'}`}>
-          <ListMusic className={`w-7 h-7 ${currentView === 'library' || currentView === 'playlist' ? 'fill-current' : ''}`} />
-          <span className="text-[11px] font-black uppercase tracking-widest">Playlists</span>
-        </button>
-        <button onClick={() => setCurrentView('favorites')} className={`flex flex-col items-center gap-1.5 ${currentView === 'favorites' ? 'text-primary' : 'text-slate-500'}`}>
-          <Heart className={`w-7 h-7 ${currentView === 'favorites' ? 'fill-current' : ''}`} />
-          <span className="text-[11px] font-black uppercase tracking-widest">Loved</span>
-        </button>
-      </nav>
+      {!isFullScreenPlayerOpen && (
+        <nav className="fixed bottom-0 left-0 right-0 h-24 bg-slate-900/80 backdrop-blur-3xl border-t border-white/5 flex md:hidden items-center justify-around z-[55] px-6 pb-6">
+          <button onClick={() => setCurrentView('home')} className={`flex flex-col items-center gap-1.5 ${currentView === 'home' ? 'text-primary' : 'text-slate-500'}`}>
+            <Home className={`w-7 h-7 ${currentView === 'home' ? 'fill-current' : ''}`} />
+            <span className="text-[11px] font-black uppercase tracking-widest">Home</span>
+          </button>
+          <button onClick={() => setCurrentView('search')} className={`flex flex-col items-center gap-1.5 ${currentView === 'search' ? 'text-primary' : 'text-slate-500'}`}>
+            <Search className="w-7 h-7" />
+            <span className="text-[11px] font-black uppercase tracking-widest">Search</span>
+          </button>
+          <button onClick={() => setCurrentView('library')} className={`flex flex-col items-center gap-1.5 ${currentView === 'library' || currentView === 'playlist' ? 'text-primary' : 'text-slate-500'}`}>
+            <ListMusic className={`w-7 h-7 ${currentView === 'library' || currentView === 'playlist' ? 'fill-current' : ''}`} />
+            <span className="text-[11px] font-black uppercase tracking-widest">Playlists</span>
+          </button>
+          <button onClick={() => setCurrentView('favorites')} className={`flex flex-col items-center gap-1.5 ${currentView === 'favorites' ? 'text-primary' : 'text-slate-500'}`}>
+            <Heart className={`w-7 h-7 ${currentView === 'favorites' ? 'fill-current' : ''}`} />
+            <span className="text-[11px] font-black uppercase tracking-widest">Loved</span>
+          </button>
+        </nav>
+      )}
 
       {/* Modals */}
       <AnimatePresence>
@@ -748,8 +750,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
 
               {/* Mobile Album Art */}
               <div className="flex-1 flex items-center justify-center mb-10 min-h-0">
-                <motion.img 
-                  layoutId={`player-art-mobile-${current.id}`}
+                <img 
                   src={current.coverUrl || DEFAULT_COVER} 
                   className="w-full aspect-square rounded-xl shadow-2xl border border-white/5 object-cover" 
                   alt="" 
@@ -818,9 +819,8 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               
               {/* Left/Center: Huge Album Art */}
               <div className="w-full md:w-3/5 flex items-center justify-center min-h-0">
-                <div className="relative w-full max-w-[300px] md:max-w-[700px] aspect-square shrink min-h-0">
-                  <motion.img 
-                    layoutId={`player-art-${current.id}`}
+                <div className="relative w-full max-w-[300px] md:max-w-[600px] aspect-square shrink min-h-0">
+                  <img 
                     src={current.coverUrl || DEFAULT_COVER} 
                     className="w-full h-full rounded-2xl md:rounded-3xl shadow-[0_30px_100px_-20px_rgba(0,0,0,0.8)] object-cover border border-white/5" 
                     alt="" 
@@ -829,7 +829,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
               </div>
 
               {/* Right Side: Up Next / Queue Panel */}
-              <div className="w-full md:w-2/5 flex flex-col h-full max-h-[600px] md:max-h-none bg-black/20 backdrop-blur-3xl rounded-3xl border border-white/5 overflow-hidden">
+              <div className="w-full md:w-2/5 flex flex-col h-full max-h-[500px] md:max-h-none bg-black/30 backdrop-blur-3xl rounded-3xl border border-white/5 overflow-hidden">
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                   <div className="flex gap-8">
                     {['UP NEXT', 'LYRICS', 'RELATED'].map((tab, i) => (
@@ -838,8 +838,8 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                       </button>
                     ))}
                   </div>
-                  <button className="px-4 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                    <Save className="w-3 h-3" /> Save
+                  <button onClick={() => setShowPlaylistSelectorModal(true)} className="px-4 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
+                    <Plus className="w-3 h-3" /> Save
                   </button>
                 </div>
                 
