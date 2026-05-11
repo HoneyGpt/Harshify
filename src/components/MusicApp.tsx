@@ -16,6 +16,8 @@ interface Song {
   source: string
 }
 
+const CATEGORIES = ['All', 'Familiar', 'Discover', 'Popular', 'Deep cuts']
+
 interface Playlist {
   id: string
   name: string
@@ -328,41 +330,115 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         </button>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col relative overflow-hidden h-full">
-        <header className="flex items-center justify-between p-4 md:p-6 md:px-10 z-30">
-          <div className="flex-1 max-w-2xl relative group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search tracks..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full bg-white/5 border border-white/5 rounded-[2rem] pl-12 pr-6 py-3 md:py-4 text-xs md:text-sm font-bold outline-none focus:bg-white/10 focus:border-primary/40 transition-all"
-            />
+      {/* Main Content Area */}
+      <main className={`flex-1 relative flex flex-col min-w-0 ${isFullScreenPlayerOpen ? 'bg-black' : 'bg-slate-950'}`}>
+        {/* Top Header (YouTube Music Style) */}
+        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-10 shrink-0 z-40 bg-inherit border-b border-white/5">
+          <div className="flex items-center gap-10 flex-1">
+            <div className="hidden md:flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-xl px-4 py-2.5 w-full max-w-2xl transition-all border border-white/5 group">
+              <Search className="w-5 h-5 text-white/40 group-hover:text-primary transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Search songs, albums, artists, podcasts" 
+                className="bg-transparent border-none outline-none text-sm font-medium w-full text-white placeholder:text-white/20"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-3 md:gap-6 ml-4 md:ml-10">
-            <button className="w-10 h-10 md:w-12 md:h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-white/10 transition-colors">
-              <Bell className="w-4 h-4 md:w-5 md:h-5 text-slate-400" />
-            </button>
-            <div className="flex items-center gap-4 pl-4 md:pl-6 border-l border-white/5">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-2xl flex items-center justify-center border border-white/5 shadow-xl">
-                <User className="w-5 h-5 md:w-6 md:h-6 text-slate-400" />
+          <div className="flex items-center gap-6">
+            <button className="text-white/40 hover:text-white transition-colors"><Cast className="w-6 h-6" /></button>
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-primary to-indigo-400 p-[2px]">
+              <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Harsh" alt="Profile" className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar px-6 md:px-10 pb-40">
+        <div className="flex-1 overflow-y-auto no-scrollbar relative">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={currentView}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
+            {isFullScreenPlayerOpen ? (
+              <motion.div 
+                key="full-player"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 z-50 bg-black flex flex-col md:flex-row p-4 md:p-10 gap-10 overflow-hidden"
+              >
+                {/* Left: Large Album Art */}
+                <div className="w-full md:w-[55%] flex flex-col items-center justify-center min-h-0">
+                  <div className="relative w-full max-w-[500px] aspect-square shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+                    <img 
+                      src={current?.coverUrl || DEFAULT_COVER} 
+                      className="w-full h-full rounded-lg object-cover shadow-2xl" 
+                      alt="" 
+                    />
+                  </div>
+                </div>
+
+                {/* Right: Queue / Tabs Panel */}
+                <div className="w-full md:w-[45%] flex flex-col bg-[#0a0a0a] rounded-xl border border-white/5 overflow-hidden">
+                  <div className="flex items-center px-6 pt-6 gap-8 border-b border-white/5">
+                    {['UP NEXT', 'LYRICS', 'RELATED'].map((tab, i) => (
+                      <button key={tab} className={`text-[11px] font-black tracking-[0.2em] pb-4 transition-all ${i === 0 ? 'text-white border-b-2 border-white' : 'text-white/40 hover:text-white'}`}>
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="p-6 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.1em] mb-0.5">Playing from</p>
+                      <p className="text-sm font-black text-white">Your queue</p>
+                    </div>
+                    <button onClick={() => setShowPlaylistSelectorModal(true)} className="px-5 py-2 bg-white text-black rounded-full text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
+                      <Plus className="w-4 h-4" /> Save
+                    </button>
+                  </div>
+
+                  {/* Filter Chips */}
+                  <div className="px-6 pb-4 flex gap-2 overflow-x-auto no-scrollbar">
+                    {CATEGORIES.map(cat => (
+                      <button key={cat} className={`px-4 py-1.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all border ${cat === 'All' ? 'bg-white text-black border-white' : 'bg-white/5 text-white border-white/5 hover:bg-white/10'}`}>
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
+                    {queue.map((s, i) => (
+                      <div 
+                        key={`${s.id}-${i}`}
+                        onClick={() => playTrack(s)}
+                        className={`flex items-center gap-4 p-3 rounded-lg transition-all cursor-pointer group ${s.id === current?.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                      >
+                        <div className="relative w-12 h-12 shrink-0">
+                          <img src={s.coverUrl || DEFAULT_COVER} className="w-full h-full rounded-md object-cover" alt="" />
+                          {s.id === current?.id && isPlaying && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
+                              <Volume2 className="w-5 h-5 text-primary fill-current" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className={`text-sm font-black truncate ${s.id === current?.id ? 'text-primary' : 'text-white'}`}>{s.title}</h5>
+                          <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-widest">{s.artist}</p>
+                        </div>
+                        <span className="text-[11px] font-bold text-white/30 tabular-nums">{s.duration}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={currentView}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="px-6 md:px-10 pb-40"
+              >
               {currentView === 'home' && (
                 <div className="space-y-12">
                   {/* Hero Section */}
@@ -523,80 +599,63 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                 </div>
               )}
             </motion.div>
-          </AnimatePresence>
-        </div>
+          )}
+        </AnimatePresence>
+      </div>
 
-        {/* Player Bar (Floating Island) */}
-        {current && !isFullScreenPlayerOpen && (
+      {/* Persistent Player Bar (YouTube Music Style) */}
+      <AnimatePresence>
+        {current && (
           <motion.div 
             initial={{ y: 100 }} animate={{ y: 0 }}
-            className="fixed bottom-24 md:bottom-8 left-4 right-4 md:left-[calc(18rem+2rem)] md:right-10 z-50 bg-slate-900/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] md:rounded-[3rem] p-3 md:p-6 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)]"
-            onClick={() => setIsFullScreenPlayerOpen(true)}
+            className="fixed bottom-0 left-0 right-0 h-20 md:h-24 bg-[#0a0a0a] border-t border-white/5 z-[100] px-4 md:px-10 flex items-center justify-between"
           >
-            <div className="flex flex-col gap-2 md:gap-4">
-              <div className="flex items-center gap-4 lg:gap-12">
-                <div 
-                  className="flex items-center gap-4 cursor-pointer min-w-0 flex-1 lg:flex-initial lg:w-72 group"
-                >
-                  <img src={current.coverUrl || DEFAULT_COVER} className="w-14 h-14 md:w-16 md:h-16 rounded-2xl object-cover shadow-2xl group-hover:scale-105 transition-transform" alt="" />
-                  <div className="min-w-0">
-                    <h5 className="font-black text-white text-base md:text-lg truncate tracking-tight leading-none mb-1">{current.title}</h5>
-                    <p className="text-slate-400 text-xs md:text-xs font-bold uppercase tracking-widest truncate">{current.artist}</p>
-                  </div>
-                </div>
+            {/* Left: Controls */}
+            <div className="flex items-center gap-4 md:gap-8 w-1/4">
+              <button onClick={playPrevious} className="text-white hover:text-primary transition-colors"><SkipBack className="w-6 h-6 md:w-8 md:h-8 fill-current" /></button>
+              <button onClick={togglePlayPause} className="w-10 h-10 md:w-14 md:h-14 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+                {isPlaying ? <Pause className="w-5 h-5 md:w-6 md:h-6 fill-current" /> : <Play className="w-5 h-5 md:w-6 md:h-6 fill-current ml-0.5" />}
+              </button>
+              <button onClick={playNext} className="text-white hover:text-primary transition-colors"><SkipForward className="w-6 h-6 md:w-8 md:h-8 fill-current" /></button>
+              <span className="hidden md:block text-[11px] font-bold text-white/40 tabular-nums">
+                {Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')} / {Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}
+              </span>
+            </div>
 
-                <div className="flex items-center gap-4 md:gap-8">
-                  {/* Desktop Controls */}
-                  <div className="hidden md:flex items-center gap-6">
-                    <button onClick={() => setShuffle(!shuffle)} className={`transition-colors ${shuffle ? 'text-primary' : 'text-slate-600 hover:text-white'}`}><Shuffle className="w-4 h-4" /></button>
-                    <button onClick={playPrevious} className="text-white/60 hover:text-white transition-colors"><SkipBack className="w-6 h-6 fill-current" /></button>
-                    <button onClick={togglePlayPause} className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-2xl">
-                      {isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current ml-1" />}
-                    </button>
-                    <button onClick={playNext} className="text-white/60 hover:text-white transition-colors"><SkipForward className="w-6 h-6 fill-current" /></button>
-                    <button onClick={() => setRepeat(repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off')} className={`transition-colors relative ${repeat !== 'off' ? 'text-primary' : 'text-slate-600 hover:text-white'}`}>
-                      <Repeat className="w-4 h-4" />
-                      {repeat === 'one' && <span className="absolute -top-1 -right-1 bg-primary text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center text-white">1</span>}
-                    </button>
-                  </div>
+            {/* Center: Track Details */}
+            <div className="flex items-center justify-center gap-4 flex-1 min-w-0 px-10 cursor-pointer" onClick={() => setIsFullScreenPlayerOpen(true)}>
+              <img src={current.coverUrl || DEFAULT_COVER} className="w-10 h-10 md:w-12 md:h-12 rounded-md object-cover shadow-xl" alt="" />
+              <div className="text-center min-w-0">
+                <h4 className="text-sm font-black text-white truncate mb-0.5">{current.title}</h4>
+                <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-[0.1em]">{current.artist}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="text-white/40 hover:text-white p-2"><ThumbsDown className="w-4 h-4" /></button>
+                <button className="text-white/40 hover:text-white p-2"><ThumbsUp className="w-4 h-4" /></button>
+              </div>
+            </div>
 
-                  {/* Mobile Controls */}
-                  <div className="md:hidden flex items-center gap-4">
-                    <button onClick={playNext} className="text-white/60 p-2"><SkipForward className="w-8 h-8 fill-current" /></button>
-                    <button onClick={togglePlayPause} className="w-14 h-14 bg-white text-black rounded-full flex items-center justify-center shadow-2xl">
-                      {isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current ml-1" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="hidden lg:flex items-center gap-6 w-80 justify-end border-l border-white/5 pl-10">
-                  {/* Sound Reducer (Volume Control) */}
-                  <div className="flex items-center gap-4 group/vol">
-                    <button onClick={toggleMute} className="text-slate-500 hover:text-white transition-colors">
-                      {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
-                    <div className="w-24 h-1.5 bg-white/10 rounded-full relative overflow-hidden cursor-pointer group/bar">
-                      <div className="absolute h-full bg-primary rounded-full transition-all" style={{ width: `${isMuted ? 0 : volume * 100}%` }} />
-                      <input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    </div>
-                  </div>
-                  <button onClick={() => setCurrentView('library')} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"><ListMusic className="w-6 h-6 text-slate-500 hover:text-white" /></button>
-                  <button className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"><MoreHorizontal className="w-6 h-6 text-slate-500 hover:text-white" /></button>
+            {/* Right: Sound & Tools */}
+            <div className="flex items-center justify-end gap-6 w-1/4">
+              <div className="hidden lg:flex items-center gap-4 group/vol">
+                <Volume2 className="w-5 h-5 text-white/40 group-hover/vol:text-white transition-colors" />
+                <div className="w-24 h-1 bg-white/10 rounded-full relative overflow-hidden">
+                  <div className="absolute h-full bg-white rounded-full" style={{ width: `${volume * 100}%` }} />
+                  <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => handleVolumeChange(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 </div>
               </div>
+              <button onClick={() => setRepeat(repeat === 'off' ? 'all' : 'off')} className={`transition-colors ${repeat !== 'off' ? 'text-primary' : 'text-white/40 hover:text-white'}`}><Repeat className="w-5 h-5" /></button>
+              <button onClick={() => setShuffle(!shuffle)} className={`transition-colors ${shuffle ? 'text-primary' : 'text-white/40 hover:text-white'}`}><Shuffle className="w-5 h-5" /></button>
+              <button onClick={() => setIsFullScreenPlayerOpen(!isFullScreenPlayerOpen)} className="text-white/40 hover:text-white transition-colors"><ChevronDown className={`w-6 h-6 transition-transform ${isFullScreenPlayerOpen ? 'rotate-180' : ''}`} /></button>
+            </div>
 
-              {/* Progress Bar */}
-              <div className="flex items-center gap-4 px-2">
-                <span className="text-[10px] md:text-xs font-black text-slate-600 w-10 text-right tabular-nums">{Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')}</span>
-                <div className="flex-1 h-1.5 md:h-2 bg-white/10 rounded-full relative overflow-hidden cursor-pointer group">
-                  <div className="absolute h-full bg-primary rounded-full transition-all" style={{ width: `${(currentTime/duration)*100}%` }} />
-                  <input type="range" min="0" max={duration} value={currentTime} onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                </div>
-                <span className="text-[10px] md:text-xs font-black text-slate-600 w-10 tabular-nums">{Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}</span>
-              </div>
+            {/* Progress Bar (Global) */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
+              <div className="h-full bg-primary transition-all" style={{ width: `${(currentTime/duration)*100}%` }} />
             </div>
           </motion.div>
         )}
+      </AnimatePresence>
       </main>
 
       {/* Mobile Bottom Navigation */}
@@ -706,229 +765,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
           </div>
         )}
       </AnimatePresence>
-      {/* Full Screen Mobile Player */}
-      <AnimatePresence>
-        {isFullScreenPlayerOpen && current && (
-          <motion.div 
-            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-0 z-[110] bg-slate-950 flex flex-col p-6 md:p-12"
-          >
-            {/* Dynamic Background Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/30 to-slate-950" />
-            
-            {/* Header Section */}
-            <div className="relative z-10 flex items-center justify-between mb-10">
-              <button onClick={() => setIsFullScreenPlayerOpen(false)} className="p-2 -ml-2 text-white/70 hover:text-white transition-colors">
-                <X className="w-8 h-8" />
-              </button>
-              <div className="text-center">
-                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-1">Playing From</p>
-                <p className="text-xs font-black text-white uppercase tracking-widest">{currentView === 'playlist' ? 'Your Playlist' : 'MelodyMentor'}</p>
-              </div>
-              <button className="p-2 -mr-2 text-white/70 hover:text-white">
-                <MoreHorizontal className="w-8 h-8" />
-              </button>
-            </div>
-
-            {/* Mobile Layout: YouTube Music Style */}
-            <div className="md:hidden relative z-10 flex-1 flex flex-col pt-4 min-h-0">
-              {/* Mobile Header */}
-              <div className="flex items-center justify-between mb-8">
-                <button onClick={() => setIsFullScreenPlayerOpen(false)}><ChevronDown className="w-8 h-8 text-white" /></button>
-                <div className="flex bg-white/10 rounded-full p-1">
-                  <button className="px-4 py-1.5 bg-white/20 rounded-full text-[10px] font-black text-white flex items-center gap-2">
-                    <Headphones className="w-3 h-3" /> Audio
-                  </button>
-                  <button className="px-4 py-1.5 text-[10px] font-black text-white/40">Video</button>
-                </div>
-                <div className="flex gap-4">
-                  <Cast className="w-6 h-6 text-white" />
-                  <MoreVertical className="w-6 h-6 text-white" />
-                </div>
-              </div>
-
-              {/* Mobile Album Art */}
-              <div className="flex-1 flex items-center justify-center mb-10 min-h-0">
-                <img 
-                  src={current.coverUrl || DEFAULT_COVER} 
-                  className="w-full aspect-square rounded-xl shadow-2xl border border-white/5 object-cover" 
-                  alt="" 
-                />
-              </div>
-
-              {/* Mobile Info & Action Section */}
-              <div className="space-y-8 mb-8">
-                <div>
-                  <div className="flex items-center justify-between gap-4 mb-1">
-                    <h2 className="text-3xl font-black text-white tracking-tight truncate">{current.title}</h2>
-                    <ChevronRight className="w-6 h-6 text-white/40 shrink-0" />
-                  </div>
-                  <p className="text-lg font-bold text-white/50 truncate tracking-wide">{current.artist}</p>
-                </div>
-
-                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
-                  <button className="px-5 py-2.5 bg-white/5 border border-white/5 rounded-full flex items-center gap-2 text-white text-xs font-black">
-                    <ThumbsUp className="w-4 h-4" /> 11K
-                  </button>
-                  <button className="px-5 py-2.5 bg-white/5 border border-white/5 rounded-full text-white">
-                    <ThumbsDown className="w-4 h-4" />
-                  </button>
-                  <button className="px-5 py-2.5 bg-white/5 border border-white/5 rounded-full flex items-center gap-2 text-white text-xs font-black">
-                    <Mic2 className="w-4 h-4" /> Lyrics
-                  </button>
-                  <button onClick={() => setShowPlaylistSelectorModal(true)} className="px-5 py-2.5 bg-white/5 border border-white/5 rounded-full flex items-center gap-2 text-white text-xs font-black">
-                    <Save className="w-4 h-4" /> Save
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile Progress & Controls */}
-              <div className="space-y-10">
-                <div>
-                  <div className="h-1 w-full bg-white/10 rounded-full relative mb-4">
-                    <div className="absolute h-full bg-white rounded-full transition-all" style={{ width: `${(currentTime/duration)*100}%` }} />
-                    <input type="range" min="0" max={duration} value={currentTime} onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  </div>
-                  <div className="flex justify-between text-[10px] font-bold text-white/30 tabular-nums">
-                    <span>{Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')}</span>
-                    <span>{Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <button onClick={() => setShuffle(!shuffle)} className={`transition-colors ${shuffle ? 'text-primary' : 'text-white/40'}`}><Shuffle className="w-7 h-7" /></button>
-                  <button onClick={playPrevious} className="text-white"><SkipBack className="w-10 h-10 fill-current" /></button>
-                  <button onClick={togglePlayPause} className="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-all">
-                    {isPlaying ? <Pause className="w-10 h-10 fill-current" /> : <Play className="w-10 h-10 fill-current ml-1" />}
-                  </button>
-                  <button onClick={playNext} className="text-white"><SkipForward className="w-10 h-10 fill-current" /></button>
-                  <button className="text-white/40"><Repeat className="w-7 h-7" /></button>
-                </div>
-              </div>
-
-              {/* Mobile Footer (Queue hint) */}
-              <div className="mt-auto pt-8 flex flex-col items-center gap-3">
-                <div className="w-10 h-1 bg-white/20 rounded-full" />
-                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Your queue</p>
-              </div>
-            </div>
-
-            {/* PC Layout: YouTube Music Style */}
-            <div className="hidden md:flex relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 max-w-[1600px] mx-auto w-full min-h-0 py-6">
-              
-              {/* Left/Center: Huge Album Art */}
-              <div className="w-full md:w-3/5 flex items-center justify-center min-h-0">
-                <div className="relative w-full max-w-[300px] md:max-w-[600px] aspect-square shrink min-h-0">
-                  <img 
-                    src={current.coverUrl || DEFAULT_COVER} 
-                    className="w-full h-full rounded-2xl md:rounded-3xl shadow-[0_30px_100px_-20px_rgba(0,0,0,0.8)] object-cover border border-white/5" 
-                    alt="" 
-                  />
-                </div>
-              </div>
-
-              {/* Right Side: Up Next / Queue Panel */}
-              <div className="w-full md:w-2/5 flex flex-col h-full max-h-[500px] md:max-h-none bg-black/30 backdrop-blur-3xl rounded-3xl border border-white/5 overflow-hidden">
-                <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                  <div className="flex gap-8">
-                    {['UP NEXT', 'LYRICS', 'RELATED'].map((tab, i) => (
-                      <button key={tab} className={`text-[10px] font-black tracking-[0.3em] ${i === 0 ? 'text-white border-b-2 border-white pb-1' : 'text-white/40 hover:text-white/60'}`}>
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-                  <button onClick={() => setShowPlaylistSelectorModal(true)} className="px-4 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-transform active:scale-95">
-                    <Plus className="w-3 h-3" /> Save
-                  </button>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto no-scrollbar p-2">
-                  <div className="px-4 py-4">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Playing from</p>
-                    <p className="text-sm font-black text-white">Your Queue</p>
-                  </div>
-                  <div className="space-y-1">
-                    {queue.map((s, i) => (
-                      <div 
-                        key={`${s.id}-${i}`}
-                        onClick={() => playTrack(s)}
-                        className={`flex items-center gap-4 p-3 rounded-xl transition-all cursor-pointer group ${s.id === current.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
-                      >
-                        <div className="relative w-10 h-10 shrink-0">
-                          <img src={s.coverUrl || DEFAULT_COVER} className="w-full h-full rounded-lg object-cover" alt="" />
-                          {s.id === current.id && (
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg">
-                              <Volume2 className="w-4 h-4 text-primary fill-current" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h5 className={`text-xs font-black truncate ${s.id === current.id ? 'text-primary' : 'text-white'}`}>{s.title}</h5>
-                          <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-widest">{s.artist}</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-white/30 tabular-nums">{s.duration}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Global Controls (Consistent on PC) */}
-            <div className="relative z-10 w-full max-w-[1600px] mx-auto mt-auto pt-6 border-t border-white/5">
-              <div className="flex flex-col gap-6">
-                {/* Progress Bar */}
-                <div className="px-4">
-                  <div className="h-1 w-full bg-white/10 rounded-full relative group cursor-pointer overflow-hidden">
-                    <div className="absolute h-full bg-white rounded-full transition-all" style={{ width: `${(currentTime/duration)*100}%` }} />
-                    <input type="range" min="0" max={duration} value={currentTime} onChange={(e) => { if (audioRef.current) audioRef.current.currentTime = Number(e.target.value) }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  </div>
-                  <div className="flex justify-between mt-2 text-[10px] font-bold text-white/30 tabular-nums">
-                    <span>{Math.floor(currentTime/60)}:{String(Math.floor(currentTime%60)).padStart(2,'0')}</span>
-                    <span>{Math.floor(duration/60)}:{String(Math.floor(duration%60)).padStart(2,'0')}</span>
-                  </div>
-                </div>
-
-                {/* Controls Row */}
-                <div className="flex items-center justify-between px-4 pb-8">
-                  <div className="flex items-center gap-8">
-                    <button onClick={playPrevious} className="text-white hover:text-primary transition-colors"><SkipBack className="w-8 h-8 fill-current" /></button>
-                    <button onClick={togglePlayPause} className="w-14 h-14 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
-                      {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
-                    </button>
-                    <button onClick={playNext} className="text-white hover:text-primary transition-colors"><SkipForward className="w-8 h-8 fill-current" /></button>
-                  </div>
-
-                  <div className="flex-1 flex items-center justify-center gap-6 min-w-0 px-10">
-                    <img src={current.coverUrl || DEFAULT_COVER} className="w-12 h-12 rounded-lg object-cover hidden lg:block" alt="" />
-                    <div className="text-center min-w-0">
-                      <h4 className="text-sm font-black text-white truncate mb-1">{current.title}</h4>
-                      <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-[0.2em]">{current.artist} • {current.album}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <button className="text-white/40 hover:text-white"><ThumbsDown className="w-4 h-4" /></button>
-                      <button className="text-white/40 hover:text-white"><ThumbsUp className="w-4 h-4" /></button>
-                      <button className="text-white/40 hover:text-white"><MoreVertical className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-8">
-                    <div className="flex items-center gap-4 group">
-                      <Volume2 className="w-5 h-5 text-white/40 group-hover:text-white transition-colors" />
-                      <div className="w-24 h-1 bg-white/10 rounded-full relative overflow-hidden">
-                        <div className="absolute h-full bg-white rounded-full" style={{ width: '80%' }} />
-                      </div>
-                    </div>
-                    <button onClick={() => setShuffle(!shuffle)} className={`transition-colors ${shuffle ? 'text-primary' : 'text-white/40 hover:text-white'}`}><Shuffle className="w-5 h-5" /></button>
-                    <button className="text-white/40 hover:text-white"><Repeat className="w-5 h-5" /></button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Modals and other global elements remain here */}
     </div>
   )
 }
