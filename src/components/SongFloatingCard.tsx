@@ -26,7 +26,7 @@ interface SongFloatingCardProps {
   isOpen: boolean
   onClose: () => void
   onPlay: (previewUrl: string) => void
-  onToggleFavorite: (songId: string) => void
+  onToggleFavorite: (song: Song) => void
   onAddToQueue: (song: Song) => void
   onAddToPlayNext: (song: Song) => void
   onAddToPlaylist: (playlistId: string, song: Song) => void
@@ -84,7 +84,7 @@ export default function SongFloatingCard({ song, isOpen, onClose, onPlay, onTogg
                 
                 <div className="flex gap-3 md:gap-4">
                   <Button
-                    onClick={() => onToggleFavorite(song.id)}
+                    onClick={() => onToggleFavorite(song)}
                     variant="outline"
                     title="Favorite"
                     className={`flex-1 h-14 md:h-16 rounded-xl md:rounded-[1.2rem] border-2 transition-all ${song.isFavorite ? 'bg-rose-500 border-rose-500 text-white' : 'bg-transparent border-white/10 text-slate-500 hover:border-rose-500 hover:text-rose-500'}`}

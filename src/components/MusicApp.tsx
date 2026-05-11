@@ -639,7 +639,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         onToggleFavorite={toggleFavorite}
         onAddToQueue={(s) => setQueue([...queue, s])}
         onAddToPlayNext={(s) => { const idx = queue.findIndex(x => x.id === current?.id); const nq = [...queue]; nq.splice(idx+1, 0, s); setQueue(nq); }}
-        onAddToPlaylist={addSongToPlaylist}
+        onAddToPlaylist={addToPlaylist}
         playlists={playlists}
       />
 
@@ -689,7 +689,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                         <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest truncate">{s.artist}</p>
                       </div>
                       <Button 
-                        onClick={() => { addSongToPlaylist(selectedPlaylistId!, s); setShowAddSongSearch(false); }}
+                        onClick={() => { addToPlaylist(s, selectedPlaylistId!); setShowAddSongSearch(false); }}
                         className="bg-white text-black hover:bg-primary hover:text-white rounded-xl px-6 py-2 text-[10px] font-black uppercase tracking-widest"
                       >Add</Button>
                     </div>
