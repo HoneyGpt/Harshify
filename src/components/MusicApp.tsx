@@ -3,6 +3,7 @@ import { Search, Play, Heart, Music, Pause, Star, ListMusic, Home, LogOut, Loade
 import { Button } from '@/components/ui/button'
 import SongFloatingCard from '@/components/SongFloatingCard'
 import { motion, AnimatePresence } from 'framer-motion'
+import Hls from 'hls.js'
 
 interface Song {
   id: string
@@ -152,10 +153,29 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     setCurrent(song)
     setIsPlaying(true)
     if (openFullScreen) setIsFullScreenPlayerOpen(true)
+    
     if (audioRef.current) {
-      audioRef.current.src = song.preview
-      audioRef.current.load()
-      audioRef.current.play().catch(err => console.error("Playback failed:", err))
+      // Cleanup previous HLS instance if it exists
+      if ((window as any).hls) {
+        (window as any).hls.destroy();
+        (window as any).hls = null;
+      }
+
+      const isHLS = song.preview.includes('.m3u8')
+      
+      if (isHLS && Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(song.preview);
+        hls.attachMedia(audioRef.current);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          audioRef.current?.play().catch(err => console.error("Playback failed:", err));
+        });
+        (window as any).hls = hls;
+      } else {
+        audioRef.current.src = song.preview;
+        audioRef.current.load();
+        audioRef.current.play().catch(err => console.error("Playback failed:", err));
+      }
     }
   }
 
@@ -285,6 +305,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
           <div className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-md">
             <Play className="w-5 h-5 fill-current ml-1" />
           </div>
+        </div>
+        {/* Source Badge */}
+        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white/90 text-[8px] font-black w-5 h-5 flex items-center justify-center rounded-full border border-white/10 uppercase">
+          {song.source === 'gaana' ? 'G' : 'J'}
         </div>
       </div>
       <h4 className="font-semibold text-white text-sm truncate leading-none mb-2 px-1">{song.title}</h4>
@@ -672,10 +696,64 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                 className="px-6 md:px-10 pb-52 md:pb-40"
               >
               {currentView === 'home' && (
-                <div className="space-y-12">
-                  {/* Hero Section */}
-                  {trendingSongs.length > 0 && (
-                  <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden group shadow-md">
+                <div className="space-y-10">
+                  {/* Mobile Header & Filters (Spotify Style) */}
+                  <div className="md:hidden space-y-6">
+                    <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
+                      <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/5 overflow-hidden">
+                        <img src="https://ui-avatars.com/api/?name=User&background=random" className="w-full h-full object-cover" alt="" />
+                      </div>
+                      <button className="px-4 py-2 bg-primary text-black rounded-full text-xs font-bold whitespace-nowrap">All</button>
+                      <button className="px-4 py-2 bg-white/10 text-white rounded-full text-xs font-bold whitespace-nowrap border border-white/5">Music</button>
+                      <button className="px-4 py-2 bg-white/10 text-white rounded-full text-xs font-bold whitespace-nowrap border border-white/5">Podcasts</button>
+                    </div>
+
+                    {/* Quick Access Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { title: 'Liked Songs', color: 'bg-gradient-to-br from-indigo-700 to-indigo-900', icon: 'heart' },
+                        { title: 'Diljit Dosanjh Mix', img: 'https://i.scdn.co/image/ab67616d0000b273b06385750013897143640237' },
+                        { title: 'All Out 90s Hindi', img: 'https://i.scdn.co/image/ab67706f00000002131970221370213137213137' },
+                        { title: 'Sangeet Night', img: 'https://i.scdn.co/image/ab67706f00000002f928e46950293294324324' },
+                        { title: 'All Out 00s Hindi', img: 'https://i.scdn.co/image/ab67706f0000000224131432432432432' },
+                        { title: 'Lori - Mother\'s Lullabies', img: 'https://i.scdn.co/image/ab67706f00000002732432432432432' },
+                        { title: 'Lofi chill', img: 'https://i.scdn.co/image/ab67706f00000002734234324324' },
+                        { title: 'Energy booster (HINDI)', img: 'https://i.scdn.co/image/ab67706f00000002432432432' }
+                      ].map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-lg overflow-hidden border border-white/5 transition-all active:scale-[0.98]">
+                          <div className={`w-14 h-14 shrink-0 flex items-center justify-center ${item.color || ''}`}>
+                            {item.icon === 'heart' ? <Heart className="w-6 h-6 text-white fill-current" /> : <img src={item.img} className="w-full h-full object-cover" alt="" />}
+                          </div>
+                          <p className="text-[11px] font-bold text-white line-clamp-2 pr-2">{item.title}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Picked for you Section */}
+                  <div className="md:hidden space-y-4">
+                    <h3 className="text-2xl font-bold tracking-tight">Picked for you</h3>
+                    <div className="bg-[#181818] rounded-2xl overflow-hidden border border-white/5 flex flex-col active:scale-[0.99] transition-transform">
+                      <div className="relative aspect-[16/9] w-full">
+                        <img src="https://i.scdn.co/image/ab67616d0000b2734b1767e63261623562361234" className="w-full h-full object-cover" alt="" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
+                        <div className="absolute bottom-4 left-4">
+                          <h4 className="text-xl font-black text-white uppercase tracking-tighter">Billions Club</h4>
+                          <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Live</p>
+                        </div>
+                      </div>
+                      <div className="p-5 space-y-2">
+                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Episode • Jan 7</p>
+                        <h5 className="text-sm font-bold text-white leading-tight">Billions Club Live with The Weeknd: A Concert Film</h5>
+                        <p className="text-xs text-white/50 line-clamp-2 leading-relaxed font-medium">In the first-ever Billions Club Live concert film, The Weeknd delivers an unforgettable one-night-only performance...</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hero Section (Desktop Only) */}
+                  <div className="hidden md:block">
+                    {trendingSongs.length > 0 && (
+                    <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden group shadow-md">
                     <img src={trendingSongs[0]?.coverUrl} className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent flex flex-col justify-center p-12">
                       <span className="text-primary text-[10px] font-semibold uppercase tracking-[0.4em] mb-4">Trending Now</span>
@@ -727,6 +805,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                         {trendingSongs.map(s => <SongCard key={s.id} song={s} />)}
                       </div>
                     )}
+                  </div>
                   </div>
                 </div>
               )}

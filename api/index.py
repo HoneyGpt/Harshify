@@ -21,6 +21,28 @@ def format_duration(duration_seconds):
     except:
         return "0:00"
 
+GAANA_API_URL = os.environ.get('GAANA_API_URL', 'http://127.0.0.1:8000')
+
+def map_gaana_to_song(track):
+    images = track.get('images', {}).get('urls', {})
+    image = images.get('large_artwork') or images.get('medium_artwork') or "https://via.placeholder.com/500"
+    
+    streams = track.get('stream_urls', {}).get('urls', {})
+    # Prefer very high quality, then high, then medium
+    media_url = streams.get('very_high_quality') or streams.get('high_quality') or streams.get('medium_quality') or ""
+    
+    return {
+        "id": f"gaana_{track.get('track_id', 'unknown')}",
+        "title": track.get('title', 'Unknown'),
+        "artist": track.get('artists', 'Unknown Artist'),
+        "album": track.get('album', 'Unknown Album'),
+        "duration": format_duration(track.get('duration')),
+        "coverUrl": image,
+        "preview": media_url,
+        "isFavorite": False,
+        "source": "gaana"
+    }
+
 def map_jiosaavn_to_song(track):
     image = track.get('image') or track.get('image_url') or ""
     if image and not image.startswith('http'):
@@ -57,14 +79,27 @@ def map_jiosaavn_to_song(track):
 def get_songs():
     query = request.args.get('search')
     if query and query.strip():
+        songs = []
         try:
-            results = jiosaavn.search_for_song(query, False, True)
-            if isinstance(results, list):
-                songs = [map_jiosaavn_to_song(t) for t in results[:30]]
-                return jsonify({"songs": songs})
-            return jsonify({"songs": []})
+            # JioSaavn Search
+            jio_results = jiosaavn.search_for_song(query, False, True)
+            if isinstance(jio_results, list):
+                songs.extend([map_jiosaavn_to_song(t) for t in jio_results[:20]])
         except Exception as e:
-            return jsonify({"songs": [], "error": str(e)}), 500
+            print(f"JioSaavn error: {e}")
+
+        try:
+            # GaanaPy Search (Local or configured URL)
+            import requests
+            res = requests.get(f"{GAANA_API_URL}/songs/search?query={query}&limit=20", timeout=5)
+            if res.status_code == 200:
+                gaana_results = res.json()
+                if isinstance(gaana_results, list):
+                    songs.extend([map_gaana_to_song(t) for t in gaana_results])
+        except Exception as e:
+            print(f"GaanaPy error: {e}")
+
+        return jsonify({"songs": songs})
     else:
         # Default popular songs (matching server.ts)
         popular = [
