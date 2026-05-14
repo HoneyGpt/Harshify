@@ -710,21 +710,26 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
 
                     {/* Quick Access Grid */}
                     <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { title: 'Liked Songs', color: 'bg-gradient-to-br from-indigo-700 to-indigo-900', icon: 'heart' },
-                        { title: 'Diljit Dosanjh Mix', img: 'https://i.scdn.co/image/ab67616d0000b273b06385750013897143640237' },
-                        { title: 'All Out 90s Hindi', img: 'https://i.scdn.co/image/ab67706f00000002131970221370213137213137' },
-                        { title: 'Sangeet Night', img: 'https://i.scdn.co/image/ab67706f00000002f928e46950293294324324' },
-                        { title: 'All Out 00s Hindi', img: 'https://i.scdn.co/image/ab67706f0000000224131432432432432' },
-                        { title: 'Lori - Mother\'s Lullabies', img: 'https://i.scdn.co/image/ab67706f00000002732432432432432' },
-                        { title: 'Lofi chill', img: 'https://i.scdn.co/image/ab67706f00000002734234324324' },
-                        { title: 'Energy booster (HINDI)', img: 'https://i.scdn.co/image/ab67706f00000002432432432' }
-                      ].map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-lg overflow-hidden border border-white/5 transition-all active:scale-[0.98]">
-                          <div className={`w-14 h-14 shrink-0 flex items-center justify-center ${item.color || ''}`}>
-                            {item.icon === 'heart' ? <Heart className="w-6 h-6 text-white fill-current" /> : <img src={item.img} className="w-full h-full object-cover" alt="" />}
+                      <div 
+                        onClick={() => setCurrentView('favorites')}
+                        className="flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-lg overflow-hidden border border-white/5 transition-all active:scale-[0.98] cursor-pointer"
+                      >
+                        <div className="w-14 h-14 shrink-0 flex items-center justify-center bg-gradient-to-br from-indigo-700 to-indigo-900">
+                          <Heart className="w-6 h-6 text-white fill-current" />
+                        </div>
+                        <p className="text-[11px] font-bold text-white line-clamp-2 pr-2">Liked Songs</p>
+                      </div>
+                      
+                      {trendingSongs.slice(0, 7).map((s, idx) => (
+                        <div 
+                          key={s.id} 
+                          onClick={() => { setQueue(trendingSongs); playTrack(s); }}
+                          className="flex items-center gap-3 bg-white/5 hover:bg-white/10 rounded-lg overflow-hidden border border-white/5 transition-all active:scale-[0.98] cursor-pointer"
+                        >
+                          <div className="w-14 h-14 shrink-0 flex items-center justify-center">
+                            <img src={s.coverUrl || DEFAULT_COVER} className="w-full h-full object-cover" alt="" />
                           </div>
-                          <p className="text-[11px] font-bold text-white line-clamp-2 pr-2">{item.title}</p>
+                          <p className="text-[11px] font-bold text-white line-clamp-2 pr-2">{s.title}</p>
                         </div>
                       ))}
                     </div>
@@ -733,21 +738,26 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                   {/* Picked for you Section */}
                   <div className="md:hidden space-y-4">
                     <h3 className="text-2xl font-bold tracking-tight">Picked for you</h3>
-                    <div className="bg-[#181818] rounded-2xl overflow-hidden border border-white/5 flex flex-col active:scale-[0.99] transition-transform">
-                      <div className="relative aspect-[16/9] w-full">
-                        <img src="https://i.scdn.co/image/ab67616d0000b2734b1767e63261623562361234" className="w-full h-full object-cover" alt="" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
-                        <div className="absolute bottom-4 left-4">
-                          <h4 className="text-xl font-black text-white uppercase tracking-tighter">Billions Club</h4>
-                          <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Live</p>
+                    {trendingSongs.length > 0 && (
+                      <div 
+                        onClick={() => { setQueue(trendingSongs); playTrack(trendingSongs[0]); }}
+                        className="bg-[#181818] rounded-2xl overflow-hidden border border-white/5 flex flex-col active:scale-[0.99] transition-transform cursor-pointer"
+                      >
+                        <div className="relative aspect-[16/9] w-full">
+                          <img src={trendingSongs[0].coverUrl || DEFAULT_COVER} className="w-full h-full object-cover" alt="" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
+                          <div className="absolute bottom-4 left-4">
+                            <h4 className="text-xl font-black text-white uppercase tracking-tighter">Featured Track</h4>
+                            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Trending Now</p>
+                          </div>
+                        </div>
+                        <div className="p-5 space-y-2">
+                          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Daily Recommendation</p>
+                          <h5 className="text-sm font-bold text-white leading-tight">{trendingSongs[0].title}</h5>
+                          <p className="text-xs text-white/50 line-clamp-2 leading-relaxed font-medium">Experience the top trending track on MelodyMentor. {trendingSongs[0].title} by {trendingSongs[0].artist} is currently capturing listeners worldwide.</p>
                         </div>
                       </div>
-                      <div className="p-5 space-y-2">
-                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Episode • Jan 7</p>
-                        <h5 className="text-sm font-bold text-white leading-tight">Billions Club Live with The Weeknd: A Concert Film</h5>
-                        <p className="text-xs text-white/50 line-clamp-2 leading-relaxed font-medium">In the first-ever Billions Club Live concert film, The Weeknd delivers an unforgettable one-night-only performance...</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Hero Section (Desktop Only) */}
