@@ -233,18 +233,26 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     loadTrending()
     
     // Auth Listener
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-    })
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null)
+      }).catch(err => console.error("Session error:", err))
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null)
+      })
 
-    const savedFavs = localStorage.getItem('melody-mentor-favorites')
-    if (savedFavs) setFavorites(JSON.parse(savedFavs))
-    
-    return () => subscription.unsubscribe()
+      const savedFavs = localStorage.getItem('melody-mentor-favorites')
+      if (savedFavs) {
+        try {
+          setFavorites(JSON.parse(savedFavs))
+        } catch (e) {
+          console.error("Error parsing favorites:", e)
+        }
+      }
+      
+      return () => subscription?.unsubscribe()
+    }
   }, [])
 
   // Sync Playlists when user changes
@@ -266,16 +274,24 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       if (error) {
         console.error('Error fetching playlists:', error)
       } else if (data) {
-        setPlaylists(data.map((p: any) => ({
+        setPlaylists((data as any[]).map((p: any) => ({
           id: p.id,
           name: p.playlist_name,
-          songs: p.songs
+          songs: Array.isArray(p.songs) ? p.songs : []
         })))
       }
     } else {
       const savedPlaylists = localStorage.getItem('melody-mentor-playlists')
-      if (savedPlaylists) setPlaylists(JSON.parse(savedPlaylists))
-      else setPlaylists([])
+      if (savedPlaylists) {
+        try {
+          setPlaylists(JSON.parse(savedPlaylists))
+        } catch (e) {
+          console.error("Error parsing playlists:", e)
+          setPlaylists([])
+        }
+      } else {
+        setPlaylists([])
+      }
     }
   }
 
@@ -793,12 +809,12 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                 <DropdownMenu.Trigger asChild>
                   <button className="flex items-center gap-3 focus:outline-none">
                     <div className="hidden md:flex flex-col items-end">
-                      <span className="text-xs font-bold text-white leading-none">{user.user_metadata.full_name || user.email}</span>
+                      <span className="text-xs font-bold text-white leading-none">{user?.user_metadata?.full_name || user?.email}</span>
                       <span className="text-[10px] font-medium text-white/40">Premium Account</span>
                     </div>
                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-primary to-indigo-400 p-[2px]">
                       <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
-                        <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        <img src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} alt="Profile" className="w-full h-full object-cover" />
                       </div>
                     </div>
                   </button>
@@ -823,7 +839,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         </header>
 
         <div className="flex-1 overflow-y-auto no-scrollbar relative flex flex-col">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {isFullScreenPlayerOpen ? (
               <motion.div 
                 key="full-player"

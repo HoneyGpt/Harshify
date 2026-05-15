@@ -16,7 +16,7 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-white selection:bg-primary/20 overflow-x-hidden">
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {!showApp ? (
           <motion.div
             key="landing"
