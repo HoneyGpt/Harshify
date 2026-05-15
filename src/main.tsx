@@ -8,3 +8,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 )
+
+window.addEventListener('appinstalled', () => {
+  if ((window as any).gtag) {
+    (window as any).gtag('event', 'pwa_installed', { 'platform': 'Android/PWA' });
+  }
+});

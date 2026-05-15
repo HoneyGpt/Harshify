@@ -376,7 +376,12 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       const raw = Array.isArray(data) ? data : (data.songs || [])
       setTracks(raw.map((s: any) => ({ ...s, isFavorite: favorites.some(f => f.id === s.id) })))
     } catch (e) { console.error(e) }
-    finally { setLoading(false) }
+    finally { 
+      setLoading(false) 
+      if ((window as any).gtag) {
+        (window as any).gtag('event', 'search_executed', { 'search_term': search });
+      }
+    }
   }
 
   const handleQueueDiscovery = async () => {
@@ -438,6 +443,14 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     setCurrent(songToPlay)
     setIsPlaying(true)
     if (openFullScreen) setIsFullScreenPlayerOpen(true)
+    
+    if ((window as any).gtag) {
+      (window as any).gtag('event', 'song_played', {
+        'song_title': songToPlay.title,
+        'artist': songToPlay.artist,
+        'source': songToPlay.source
+      });
+    }
     
     if (audioRef.current) {
       // Cleanup previous HLS instance if it exists
