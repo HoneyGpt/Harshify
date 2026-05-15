@@ -237,6 +237,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       })
       navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious())
       navigator.mediaSession.setActionHandler('nexttrack', () => playNext())
+    }
   }, [current, isPlaying])
 
   const sensors = useSensors(
