@@ -92,24 +92,15 @@ def get_songs():
             print(f"JioSaavn error: {e}")
 
         try:
-            # GaanaPy Search
-            import requests
-            res = requests.get(f"{GAANA_API_URL}/songs/search?query={query}&limit=10", timeout=5)
-            if res.status_code == 200:
-                gaana_results = res.json()
-                if isinstance(gaana_results, list):
-                    gaana_songs = [map_gaana_to_song(t) for t in gaana_results]
+            # GaanaPy Search (Using direct module)
+            gaana_songs = gaana.search_for_song(query, limit=10)
         except Exception as e:
             print(f"GaanaPy error: {e}")
 
         try:
-            # YouTube Search
-            import requests
-            res = requests.get(f"{YOUTUBE_API_URL}/search?query={query}&limit=10", timeout=8)
-            if res.status_code == 200:
-                yt_results = res.json()
-                if isinstance(yt_results, list):
-                    yt_songs = [map_youtube_to_song(t) for t in yt_results]
+            # YouTube Search (Using direct module)
+            import youtube
+            yt_songs = youtube.search_for_song(query, limit=10)
         except Exception as e:
             print(f"YouTube error: {e}")
 
