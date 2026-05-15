@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Play, Heart, Music, Pause, Star, ListMusic, Home, LogOut, Loader2, TrendingUp, SkipForward, SkipBack, Plus, Shuffle, Repeat, X, Library, Mic2, Bell, User, Settings, MoreHorizontal, Zap, Volume2, Volume1, VolumeX, ChevronDown, Headphones, Cast, MoreVertical, ChevronRight, ThumbsUp, ThumbsDown, Save } from 'lucide-react'
+import { Search, Play, Heart, Music, Pause, Star, ListMusic, Home, LogOut, Loader2, TrendingUp, SkipForward, SkipBack, Plus, Shuffle, Repeat, X, Library, Mic2, Bell, User, Settings, MoreHorizontal, Zap, Volume2, Volume1, VolumeX, ChevronDown, Headphones, Cast, MoreVertical, ChevronRight, ThumbsUp, ThumbsDown, Save, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SongFloatingCard from '@/components/SongFloatingCard'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
@@ -68,36 +68,60 @@ const SortableQueueItem = ({ song, currentId, isPlaying, onPlay, onRemove }: any
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 100 : 1,
-    opacity: isDragging ? 0.8 : 1,
+    opacity: isDragging ? 0.7 : 1,
     scale: isDragging ? 1.02 : 1,
-    boxShadow: isDragging ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
+    boxShadow: isDragging ? '0 20px 40px rgba(0,0,0,0.4)' : 'none',
   };
 
   return (
     <motion.div 
       layout
       ref={setNodeRef} style={style}
-      className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200 cursor-pointer group ${song.id === currentId ? 'bg-white/10' : 'hover:bg-white/5'} ${isDragging ? 'bg-[#282828] border border-white/10' : ''}`}
+      className={`flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 cursor-pointer group ${song.id === currentId ? 'bg-white/10' : 'hover:bg-white/5'} ${isDragging ? 'bg-[#242424] border border-white/10 shadow-2xl' : ''}`}
     >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-4 -m-3 text-white/20 hover:text-white transition-colors">
-        <MoreVertical className="w-5 h-5" />
+      {/* Drag Handle - Left (Match Screenshot) */}
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 text-white/20 hover:text-white transition-colors shrink-0 touch-none">
+        <Menu className="w-4 h-4 opacity-40 group-hover:opacity-100" />
       </div>
-      <div onClick={() => onPlay(song)} className="relative w-12 h-12 shrink-0">
-        <img src={song.coverUrl || DEFAULT_COVER} className="w-full h-full rounded-md object-cover" alt="" />
+
+      {/* Thumbnail with Duration Badge */}
+      <div onClick={() => onPlay(song)} className="relative w-14 h-14 md:w-12 md:h-12 shrink-0 rounded-lg overflow-hidden shadow-sm">
+        <img src={song.coverUrl || DEFAULT_COVER} className="w-full h-full object-cover" alt="" />
+        <div className="absolute bottom-1 right-1 bg-black/70 text-[8px] font-black px-1 rounded-sm text-white/90 tabular-nums">
+          {song.duration}
+        </div>
         {song.id === currentId && isPlaying && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <Volume2 className="w-5 h-5 text-primary fill-current" />
           </div>
         )}
       </div>
+
+      {/* Title & Artist */}
       <div onClick={() => onPlay(song)} className="flex-1 min-w-0">
-        <h5 className={`text-sm font-semibold truncate ${song.id === currentId ? 'text-primary' : 'text-white'}`}>{song.title}</h5>
-        <p className="text-[10px] font-bold text-white/40 truncate uppercase">{song.artist}</p>
+        <h5 className={`text-sm font-semibold truncate leading-tight ${song.id === currentId ? 'text-primary' : 'text-white'}`}>{song.title}</h5>
+        <p className="text-[10px] font-bold text-white/30 truncate uppercase mt-0.5">{song.artist}</p>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="text-[11px] font-bold text-white/30 tabular-nums">{song.duration}</span>
-        <button onClick={(e) => { e.stopPropagation(); onRemove(song.id); }} className="text-white/20 hover:text-rose-500 p-2 transition-colors"><X className="w-5 h-5" /></button>
-      </div>
+
+      {/* 3-Dots Menu - Right (Match Screenshot) */}
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <button onClick={(e) => e.stopPropagation()} className="p-2 text-white/10 hover:text-white transition-colors shrink-0">
+            <MoreVertical className="w-4 h-4" />
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content 
+            className="z-[250] min-w-[160px] bg-[#181818] border border-white/10 rounded-xl p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+            sideOffset={5}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DropdownMenu.Item onClick={() => onRemove(song.id)} className="flex items-center gap-3 px-3 py-2.5 text-[10px] font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg cursor-pointer outline-none transition-colors uppercase tracking-widest">
+              <X className="w-4 h-4" /> Remove from Queue
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </motion.div>
   );
 };
@@ -296,7 +320,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     finally { setLoading(false) }
   }
 
-  const handleQueueSearch = async () => {
+  const handleQueueDiscovery = async () => {
     if (!queueSearchQuery.trim()) return
     setSearchingInQueue(true)
     try {
@@ -713,10 +737,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                               <input 
                                 type="text" placeholder="Search songs to add..." value={queueSearchQuery}
                                 onChange={(e) => setQueueSearchQuery(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleQueueSearch()}
+                                onKeyDown={(e) => e.key === 'Enter' && handleQueueDiscovery()}
                                 className="flex-1 bg-black/40 border border-white/5 rounded-lg px-4 py-2 text-xs text-white outline-none focus:border-primary"
                               />
-                              <button onClick={handleQueueSearch} className="bg-primary text-white p-2 rounded-lg"><Search className="w-4 h-4" /></button>
+                              <button onClick={handleQueueDiscovery} className="bg-primary text-white p-2 rounded-lg"><Search className="w-4 h-4" /></button>
                             </div>
                             <div className="max-h-40 overflow-y-auto no-scrollbar space-y-2">
                               {searchingInQueue ? <Loader2 className="w-5 h-5 animate-spin text-primary mx-auto" /> : (
@@ -876,7 +900,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                                   <input 
                                     type="text" placeholder="Search to add..." value={queueSearchQuery}
                                     onChange={(e) => setQueueSearchQuery(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleQueueSearch()}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleQueueDiscovery()}
                                     className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-primary"
                                   />
                                 </div>
