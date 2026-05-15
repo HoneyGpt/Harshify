@@ -2,8 +2,26 @@ import { useState, useEffect, useRef } from 'react'
 import { Search, Play, Heart, Music, Pause, Star, ListMusic, Home, LogOut, Loader2, TrendingUp, SkipForward, SkipBack, Plus, Shuffle, Repeat, X, Library, Mic2, Bell, User, Settings, MoreHorizontal, Zap, Volume2, Volume1, VolumeX, ChevronDown, Headphones, Cast, MoreVertical, ChevronRight, ThumbsUp, ThumbsDown, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SongFloatingCard from '@/components/SongFloatingCard'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import Hls from 'hls.js'
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import {CSS} from '@dnd-kit/utilities';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 interface Song {
   id: string
@@ -269,6 +287,101 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     }
   }
 
+  const saveQueueAsPlaylist = () => {
+    if (queue.length === 0) return
+    const name = prompt("Enter playlist name:", `Queue ${new Date().toLocaleDateString()}`)
+    if (name) {
+      const newPlaylist: Playlist = {
+        id: `playlist_${Date.now()}`,
+        name: name,
+        songs: [...queue]
+      }
+      setPlaylists(prev => [...prev, newPlaylist])
+      alert(`Queue saved as "${name}"!`)
+    }
+  }
+
+  const playNextInQueue = (song: Song) => {
+    if (!current) {
+      playTrack(song)
+      return
+    }
+    const currentIndex = queue.findIndex(s => s.id === current.id)
+    const filtered = queue.filter(s => s.id !== song.id)
+    const newQueue = [...filtered]
+    newQueue.splice(currentIndex + 1, 0, song)
+    setQueue(newQueue)
+  }
+
+  const addToQueueEnd = (song: Song) => {
+    if (!queue.find(s => s.id === song.id)) {
+      setQueue(prev => [...prev, song])
+    }
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const {active, over} = event;
+    if (active.id !== over?.id) {
+      setQueue((items) => {
+        const oldIndex = items.findIndex(i => i.id === active.id);
+        const newIndex = items.findIndex(i => i.id === over?.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const SortableQueueItem = ({ song, index }: { song: Song, index: number }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging
+    } = useSortable({id: song.id});
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      zIndex: isDragging ? 100 : 1,
+      opacity: isDragging ? 0.5 : 1
+    };
+
+    return (
+      <div 
+        ref={setNodeRef} style={style}
+        className={`flex items-center gap-4 p-3 rounded-xl transition-colors duration-200 cursor-pointer group ${song.id === current?.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+      >
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-white/20 hover:text-white">
+          <MoreVertical className="w-4 h-4" />
+        </div>
+        <div onClick={() => playTrack(song)} className="relative w-12 h-12 shrink-0">
+          <img src={song.coverUrl || DEFAULT_COVER} className="w-full h-full rounded-md object-cover" alt="" />
+          {song.id === current?.id && isPlaying && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
+              <Volume2 className="w-5 h-5 text-primary fill-current" />
+            </div>
+          )}
+        </div>
+        <div onClick={() => playTrack(song)} className="flex-1 min-w-0">
+          <h5 className={`text-sm font-semibold truncate ${song.id === current?.id ? 'text-primary' : 'text-white'}`}>{song.title}</h5>
+          <p className="text-[10px] font-bold text-white/40 truncate uppercase">{song.artist}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] font-bold text-white/30">{song.duration}</span>
+          <button onClick={(e) => { e.stopPropagation(); removeFromQueue(song.id); }} className="text-white/20 hover:text-rose-500 p-2"><X className="w-5 h-5" /></button>
+        </div>
+      </div>
+    );
+  }
+
   const handleQueueSearch = async () => {
     if (!queueSearchQuery.trim()) return
     setSearchingInQueue(true)
@@ -276,7 +389,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
       const res = await fetch(`/api/songs?search=${encodeURIComponent(queueSearchQuery)}`)
       const data = await res.json()
       const raw = Array.isArray(data) ? data : (data.songs || [])
-      setQueueSearchResults(raw)
+      setQueueSearchResults(raw.map((s: any) => ({ ...s, isFavorite: favorites.some(f => f.id === s.id) })))
     } catch (e) { console.error(e) }
     finally { setSearchingInQueue(false) }
   }
@@ -394,19 +507,44 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
             <Play className="w-5 h-5 fill-current ml-1" />
           </div>
         </div>
-        {/* Source Badge */}
         <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white/90 text-[8px] font-black w-5 h-5 flex items-center justify-center rounded-full border border-white/10 uppercase">
           {song.source === 'gaana' ? 'G' : 'J'}
         </div>
       </div>
       <h4 className="font-semibold text-white text-sm truncate leading-none mb-2 px-1">{song.title}</h4>
       <p className="text-[#a7a7a7] text-[10px] font-medium tracking-normal truncate px-1">{song.artist}</p>
-      <button 
-        onClick={(e) => { e.stopPropagation(); toggleFavorite(song); }}
-        className={`absolute top-6 right-6 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-colors duration-200 ${favorites.some(f => f.id === song.id) ? 'bg-rose-500 text-white' : 'bg-black/60 text-white hover:text-rose-500'}`}
-      >
-        <Heart className={`w-3.5 h-3.5 ${favorites.some(f => f.id === song.id) ? 'fill-current' : ''}`} />
-      </button>
+      
+      {/* 3 Dots Menu */}
+      <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button onClick={(e) => e.stopPropagation()} className="p-2 bg-black/60 text-white rounded-full hover:bg-white hover:text-black transition-colors shadow-lg">
+              <MoreHorizontal className="w-3.5 h-3.5" />
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content 
+              className="z-[200] min-w-[160px] bg-[#181818] border border-white/10 rounded-xl p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+              sideOffset={5}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenu.Item onClick={() => playNextInQueue(song)} className="flex items-center gap-3 px-3 py-2.5 text-[11px] font-bold text-white/80 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer outline-none transition-colors uppercase tracking-widest">
+                <Play className="w-4 h-4" /> Play Next
+              </DropdownMenu.Item>
+              <DropdownMenu.Item onClick={() => addToQueueEnd(song)} className="flex items-center gap-3 px-3 py-2.5 text-[11px] font-bold text-white/80 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer outline-none transition-colors uppercase tracking-widest">
+                <Plus className="w-4 h-4" /> Add to Queue
+              </DropdownMenu.Item>
+              <DropdownMenu.Item onClick={() => { setSelectedSong(song); setShowPlaylistSelectorModal(true); }} className="flex items-center gap-3 px-3 py-2.5 text-[11px] font-bold text-white/80 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer outline-none transition-colors uppercase tracking-widest">
+                <ListMusic className="w-4 h-4" /> Add to Playlist
+              </DropdownMenu.Item>
+              <DropdownMenu.Separator className="h-[1px] bg-white/5 my-1" />
+              <DropdownMenu.Item onClick={() => toggleFavorite(song)} className="flex items-center gap-3 px-3 py-2.5 text-[11px] font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg cursor-pointer outline-none transition-colors uppercase tracking-widest">
+                <Heart className={`w-4 h-4 ${favorites.some(f => f.id === song.id) ? 'fill-current' : ''}`} /> {favorites.some(f => f.id === song.id) ? 'Loved' : 'Love'}
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </div>
     </div>
   )
 
@@ -590,35 +728,20 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                     </div>
 
                     <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
-                      {queue.map((s, i) => (
-                        <div 
-                          key={`${s.id}-${i}`}
-                          onClick={() => playTrack(s)}
-                          className={`flex items-center gap-4 p-3 rounded-lg transition-colors duration-200 cursor-pointer group ${s.id === current?.id ? 'bg-[#242424]' : 'hover:bg-white/5'}`}
+                      <DndContext 
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext 
+                          items={queue.map(s => s.id)}
+                          strategy={verticalListSortingStrategy}
                         >
-                          <div className="relative w-12 h-12 shrink-0">
-                            <img src={s.coverUrl || DEFAULT_COVER} className="w-full h-full rounded-md object-cover" alt="" />
-                            {s.id === current?.id && isPlaying && (
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
-                                <Volume2 className="w-5 h-5 text-primary fill-current" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h5 className={`text-sm font-semibold truncate ${s.id === current?.id ? 'text-primary' : 'text-white'}`}>{s.title}</h5>
-                            <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-normal">{s.artist}</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[11px] font-bold text-white/30 tabular-nums">{s.duration}</span>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); removeFromQueue(s.id); }}
-                              className="text-white/20 hover:text-rose-500 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                          {queue.map((s, i) => (
+                            <SortableQueueItem key={s.id} song={s} index={i} />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
                     </div>
                   </div>
                 </div>
@@ -696,12 +819,20 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                       <div className="bg-[#0a0a0a] rounded-2xl border border-white/5 p-4">
                         <div className="flex items-center justify-between mb-4 px-2">
                           <h3 className="text-[11px] font-semibold text-white/50 uppercase tracking-[0.2em]">Up Next</h3>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={saveQueueAsPlaylist}
+                            className="text-[10px] font-bold text-white/40 uppercase hover:text-white flex items-center gap-1 bg-white/5 px-3 py-1 rounded-full transition-colors"
+                          >
+                            <Save className="w-3 h-3" /> Save
+                          </button>
                           <button 
                             onClick={() => setShowQueueSearch(!showQueueSearch)}
                             className="text-[10px] font-bold text-primary uppercase bg-primary/10 px-3 py-1 rounded-full"
                           >
                             {showQueueSearch ? 'Close' : 'Add Songs'}
                           </button>
+                        </div>
                         </div>
 
                         {/* Mobile Queue Search Inline */}
@@ -739,40 +870,20 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                         </AnimatePresence>
 
                         <div className="space-y-1">
-                          {queue.map((s, i) => (
-                            <div 
-                              key={`${s.id}-${i}`}
-                              onClick={() => playTrack(s)}
-                              className={`flex items-center gap-4 p-3 rounded-xl transition-colors duration-200 cursor-pointer group ${s.id === current?.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                          <DndContext 
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <SortableContext 
+                              items={queue.map(s => s.id)}
+                              strategy={verticalListSortingStrategy}
                             >
-                              <div className="relative w-12 h-12 shrink-0">
-                                <img 
-                                  src={s.coverUrl || DEFAULT_COVER} 
-                                  className="w-full h-full rounded-md object-cover" 
-                                  alt="" 
-                                  onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_COVER }}
-                                />
-                                {s.id === current?.id && isPlaying && (
-                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-md">
-                                    <Volume2 className="w-5 h-5 text-primary fill-current" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h5 className={`text-sm font-semibold truncate ${s.id === current?.id ? 'text-primary' : 'text-white'}`}>{s.title}</h5>
-                                <p className="text-[10px] font-bold text-white/40 truncate uppercase tracking-normal">{s.artist}</p>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-[11px] font-bold text-white/30 tabular-nums">{s.duration}</span>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); removeFromQueue(s.id); }}
-                                  className="text-white/20 hover:text-rose-500 p-2"
-                                >
-                                  <X className="w-5 h-5" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                              {queue.map((s, i) => (
+                                <SortableQueueItem key={s.id} song={s} index={i} />
+                              ))}
+                            </SortableContext>
+                          </DndContext>
                         </div>
                       </div>
                     </div>
