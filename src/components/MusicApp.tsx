@@ -480,7 +480,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://mentozy.app'
+        redirectTo: window.location.origin
       }
     })
   }
