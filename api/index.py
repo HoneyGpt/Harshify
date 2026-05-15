@@ -4,6 +4,8 @@ import sys
 # Add the current directory to sys.path to allow importing local modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import jiosaavn
+import gaana
+import youtube
 import math
 from flask_cors import CORS
 
@@ -21,8 +23,6 @@ def format_duration(duration_seconds):
     except:
         return "0:00"
 
-GAANA_API_URL = os.environ.get('GAANA_API_URL', 'http://127.0.0.1:8000')
-
 def map_gaana_to_song(track):
     images = track.get('images', {}).get('urls', {})
     image = images.get('large_artwork') or images.get('medium_artwork') or "https://via.placeholder.com/500"
@@ -33,6 +33,7 @@ def map_gaana_to_song(track):
     
     return {
         "id": f"gaana_{track.get('track_id', 'unknown')}",
+        "seokey": track.get('seokey'),
         "title": track.get('title', 'Unknown'),
         "artist": track.get('artists', 'Unknown Artist'),
         "album": track.get('album', 'Unknown Album'),
@@ -41,6 +42,20 @@ def map_gaana_to_song(track):
         "preview": media_url,
         "isFavorite": False,
         "source": "gaana"
+    }
+
+def map_youtube_to_song(track):
+    return {
+        "id": f"yt_{track.get('yt_id') or track.get('id')}",
+        "yt_id": track.get('yt_id') or track.get('id'),
+        "title": track.get('title', 'Unknown'),
+        "artist": track.get('artist') or track.get('uploader') or 'YouTube',
+        "album": 'YouTube Music',
+        "duration": track.get('duration') or '0:00',
+        "coverUrl": track.get('coverUrl') or track.get('thumbnail') or f"https://i.ytimg.com/vi/{track.get('id')}/maxresdefault.jpg",
+        "preview": track.get('preview') or "",
+        "isFavorite": False,
+        "source": "youtube"
     }
 
 def map_jiosaavn_to_song(track):
@@ -75,6 +90,27 @@ def map_jiosaavn_to_song(track):
         "source": "jiosaavn"
     }
 
+@app.route('/api/songs/info')
+def get_song_info():
+    seokey = request.args.get('seokey')
+    source = request.args.get('source', 'gaana')
+    if source == 'gaana' and seokey:
+        try:
+            track = gaana.get_song_info(seokey)
+            return jsonify(map_gaana_to_song(track))
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    
+    if source == 'youtube':
+        yt_id = request.args.get('id')
+        try:
+            track = youtube.get_song_info(yt_id)
+            return jsonify(map_youtube_to_song(track))
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+            
+    return jsonify({"error": "Unsupported source or missing ID"}), 400
+
 @app.route('/api/songs')
 def get_songs():
     query = request.args.get('search')
@@ -92,24 +128,18 @@ def get_songs():
             print(f"JioSaavn error: {e}")
 
         try:
-            # GaanaPy Search
-            import requests
-            res = requests.get(f"{GAANA_API_URL}/songs/search?query={query}&limit=10", timeout=5)
-            if res.status_code == 200:
-                gaana_results = res.json()
-                if isinstance(gaana_results, list):
-                    gaana_songs = [map_gaana_to_song(t) for t in gaana_results]
+            # GaanaPy Search (Direct Import)
+            gaana_results = gaana.search_for_song(query, 10)
+            if isinstance(gaana_results, list):
+                gaana_songs = [map_gaana_to_song(t) for t in gaana_results]
         except Exception as e:
             print(f"GaanaPy error: {e}")
 
         try:
-            # YouTube Search
-            import requests
-            res = requests.get(f"{YOUTUBE_API_URL}/search?query={query}&limit=10", timeout=8)
-            if res.status_code == 200:
-                yt_results = res.json()
-                if isinstance(yt_results, list):
-                    yt_songs = [map_youtube_to_song(t) for t in yt_results]
+            # YouTube Search (Direct Import)
+            yt_results = youtube.search_for_song(query, 10)
+            if isinstance(yt_results, list):
+                yt_songs = [map_youtube_to_song(t) for t in yt_results]
         except Exception as e:
             print(f"YouTube error: {e}")
 
