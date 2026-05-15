@@ -252,51 +252,35 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
 
   // --- Initialization ---
   useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        // Load local state first (instant)
-        const savedFavs = localStorage.getItem('melody-mentor-favorites')
-        if (savedFavs) {
-          try { setFavorites(JSON.parse(savedFavs)) } catch (e) { console.error("Error parsing favorites:", e) }
-        }
+    loadTrending()
+    
+    // Switch to downloads view if offline on boot
+    if (!navigator.onLine) {
+      setCurrentView('downloads')
+    }
 
-        const savedDownloads = localStorage.getItem('melody-mentor-downloaded-metadata')
-        if (savedDownloads) {
-          try { setDownloadedSongs(JSON.parse(savedDownloads)) } catch (e) { console.error("Error parsing downloads:", e) }
-        }
+    // Auth Listener
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null)
+      }).catch(err => console.error("Session error:", err))
 
-        // Handle offline view transition
-        if (!navigator.onLine) {
-          setCurrentView('downloads')
-        }
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null)
+      })
 
-        // Supabase Auth Initialization with safety boundary
-        if (supabase) {
-          try {
-            const { data: { session }, error } = await supabase.auth.getSession()
-            if (error) throw error
-            setUser(session?.user ?? null)
-
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-              setUser(session?.user ?? null)
-            })
-            // Note: subscription is cleanup-ready
-          } catch (authErr) {
-            console.warn("Supabase auth session failed safely:", authErr)
-            setUser(null) // Fallback to guest
-          }
-        }
-
-        // Only fetch network data if online
-        if (navigator.onLine) {
-          await loadTrending()
-        }
-      } catch (globalErr) {
-        console.error("Global initialization failure:", globalErr)
+      const savedFavs = localStorage.getItem('melody-mentor-favorites')
+      if (savedFavs) {
+        try { setFavorites(JSON.parse(savedFavs)) } catch (e) { console.error("Error parsing favorites:", e) }
       }
-    };
 
-    initializeApp()
+      const savedDownloads = localStorage.getItem('melody-mentor-downloaded-metadata')
+      if (savedDownloads) {
+        try { setDownloadedSongs(JSON.parse(savedDownloads)) } catch (e) { console.error("Error parsing downloads:", e) }
+      }
+      
+      return () => subscription?.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -340,24 +324,20 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   };
 
   const fetchPlaylists = async () => {
-    if (user && supabase && navigator.onLine) {
-      try {
-        const { data, error } = await supabase
-          .from('user_playlists')
-          .select('*')
-          .eq('user_id', user.id)
-        
-        if (error) throw error
-        if (data) {
-          setPlaylists((data as any[]).map((p: any) => ({
-            id: p.id,
-            name: p.playlist_name,
-            songs: Array.isArray(p.songs) ? p.songs : []
-          })))
-        }
-      } catch (e) {
-        console.warn("Supabase playlist fetch failed safely:", e)
-        // Keep existing playlists (local state) or set empty
+    if (user && supabase) {
+      const { data, error } = await supabase
+        .from('user_playlists')
+        .select('*')
+        .eq('user_id', user.id)
+      
+      if (error) {
+        console.error('Error fetching playlists:', error)
+      } else if (data) {
+        setPlaylists((data as any[]).map((p: any) => ({
+          id: p.id,
+          name: p.playlist_name,
+          songs: Array.isArray(p.songs) ? p.songs : []
+        })))
       }
     } else {
       const savedPlaylists = localStorage.getItem('melody-mentor-playlists')
@@ -431,14 +411,9 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
 
   // --- Music Logic ---
   const loadTrending = async () => {
-    if (!navigator.onLine) {
-      setTrendingSongs([])
-      return
-    }
     setLoading(true)
     try {
       const res = await fetch('/api/modules?language=english,hindi')
-      if (!res.ok) throw new Error("Trending fetch failed")
       const data = await res.json()
       if (data.trending) {
         const mapped = data.trending.map((s: any) => ({ ...s, isFavorite: favorites.some(f => f.id === s.id) }))
@@ -446,10 +421,7 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
         setTracks(mapped)
       }
       if (data.charts) setTopCharts(data.charts)
-    } catch (e) { 
-      console.warn("Load trending failed safely:", e)
-      setTrendingSongs([])
-    }
+    } catch (e) { console.error(e) }
     finally { setTimeout(() => setLoading(false), 500) }
   }
 
@@ -1414,23 +1386,17 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
-                        {getVisibleSongs(trendingSongs).length > 0 ? (
-                          getVisibleSongs(trendingSongs).map(s => (
-                            <SongCard 
-                              key={s.id} song={s} 
-                              isFavorite={favorites.some(f => f.id === s.id)}
-                              isCached={cachedTrackIds.has(s.id)}
-                              currentView={currentView} trendingSongs={trendingSongs} tracks={tracks} favorites={favorites}
-                              onPlayTrack={playTrack} onSetQueue={setQueue} onToggleFavorite={toggleFavorite}
-                              onPlayNext={playNextInQueue} onAddToQueue={addToQueue} onSelectPlaylist={(song: any) => { setSelectedSong(song); setShowPlaylistSelectorModal(true); }}
-                              onDownload={handleDownload}
-                            />
-                          ))
-                        ) : (
-                          <div className="col-span-full py-20 text-center bg-white/5 rounded-3xl border border-white/5">
-                            <p className="text-slate-500 font-bold">No trending music available offline. Connect to internet to discover new tracks!</p>
-                          </div>
-                        )}
+                        {getVisibleSongs(trendingSongs).map(s => (
+                          <SongCard 
+                            key={s.id} song={s} 
+                            isFavorite={favorites.some(f => f.id === s.id)}
+                            isCached={cachedTrackIds.has(s.id)}
+                            currentView={currentView} trendingSongs={trendingSongs} tracks={tracks} favorites={favorites}
+                            onPlayTrack={playTrack} onSetQueue={setQueue} onToggleFavorite={toggleFavorite}
+                            onPlayNext={playNextInQueue} onAddToQueue={addToQueue} onSelectPlaylist={(song: any) => { setSelectedSong(song); setShowPlaylistSelectorModal(true); }}
+                            onDownload={handleDownload}
+                          />
+                        ))}
                       </div>
                     )}
                   </div>
@@ -1462,23 +1428,17 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
                     <div className="flex items-center justify-center py-20"><Loader2 className="w-12 h-12 animate-spin text-primary" /></div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
-                      {getVisibleSongs(tracks).length > 0 ? (
-                        getVisibleSongs(tracks).map(s => (
-                          <SongCard 
-                            key={s.id} song={s} 
-                            isFavorite={favorites.some(f => f.id === s.id)}
-                            isCached={cachedTrackIds.has(s.id)}
-                            currentView={currentView} trendingSongs={trendingSongs} tracks={tracks} favorites={favorites}
-                            onPlayTrack={playTrack} onSetQueue={setQueue} onToggleFavorite={toggleFavorite}
-                            onPlayNext={playNextInQueue} onAddToQueue={addToQueue} onSelectPlaylist={(song: any) => { setSelectedSong(song); setShowPlaylistSelectorModal(true); }}
-                            onDownload={handleDownload}
-                          />
-                        ))
-                      ) : (
-                        <div className="col-span-full py-20 text-center bg-white/5 rounded-3xl border border-white/5">
-                          <p className="text-slate-500 font-bold">No search results available offline.</p>
-                        </div>
-                      )}
+                      {getVisibleSongs(tracks).map(s => (
+                        <SongCard 
+                          key={s.id} song={s} 
+                          isFavorite={favorites.some(f => f.id === s.id)}
+                          isCached={cachedTrackIds.has(s.id)}
+                          currentView={currentView} trendingSongs={trendingSongs} tracks={tracks} favorites={favorites}
+                          onPlayTrack={playTrack} onSetQueue={setQueue} onToggleFavorite={toggleFavorite}
+                          onPlayNext={playNextInQueue} onAddToQueue={addToQueue} onSelectPlaylist={(song: any) => { setSelectedSong(song); setShowPlaylistSelectorModal(true); }}
+                          onDownload={handleDownload}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
