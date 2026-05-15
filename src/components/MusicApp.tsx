@@ -68,17 +68,19 @@ const SortableQueueItem = ({ song, currentId, isPlaying, onPlay, onRemove }: any
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 100 : 1,
-    opacity: isDragging ? 0.5 : 1
+    opacity: isDragging ? 0.8 : 1,
+    scale: isDragging ? 1.02 : 1,
+    boxShadow: isDragging ? '0 10px 30px rgba(0,0,0,0.5)' : 'none',
   };
 
   return (
     <motion.div 
       layout
       ref={setNodeRef} style={style}
-      className={`flex items-center gap-4 p-3 rounded-xl transition-colors duration-200 cursor-pointer group ${song.id === currentId ? 'bg-white/10' : 'hover:bg-white/5'}`}
+      className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200 cursor-pointer group ${song.id === currentId ? 'bg-white/10' : 'hover:bg-white/5'} ${isDragging ? 'bg-[#282828] border border-white/10' : ''}`}
     >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-white/20 hover:text-white">
-        <MoreVertical className="w-4 h-4" />
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-4 -m-3 text-white/20 hover:text-white transition-colors">
+        <MoreVertical className="w-5 h-5" />
       </div>
       <div onClick={() => onPlay(song)} className="relative w-12 h-12 shrink-0">
         <img src={song.coverUrl || DEFAULT_COVER} className="w-full h-full rounded-md object-cover" alt="" />
@@ -93,8 +95,8 @@ const SortableQueueItem = ({ song, currentId, isPlaying, onPlay, onRemove }: any
         <p className="text-[10px] font-bold text-white/40 truncate uppercase">{song.artist}</p>
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-[11px] font-bold text-white/30">{song.duration}</span>
-        <button onClick={(e) => { e.stopPropagation(); onRemove(song.id); }} className="text-white/20 hover:text-rose-500 p-2"><X className="w-5 h-5" /></button>
+        <span className="text-[11px] font-bold text-white/30 tabular-nums">{song.duration}</span>
+        <button onClick={(e) => { e.stopPropagation(); onRemove(song.id); }} className="text-white/20 hover:text-rose-500 p-2 transition-colors"><X className="w-5 h-5" /></button>
       </div>
     </motion.div>
   );
@@ -243,9 +245,10 @@ export default function MusicApp({ onBackToLanding }: MusicAppProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(TouchSensor, {
+      // Immediate activation on touch, but since listeners are ONLY on the handle, 
+      // the rest of the card remains scrollable.
       activationConstraint: {
-        delay: 250,
-        tolerance: 5,
+        distance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
